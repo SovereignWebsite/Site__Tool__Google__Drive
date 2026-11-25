@@ -1,0 +1,11 @@
+{
+  "latest": "0.1.0",
+  "latest_path": "/api/latest/drive.mjs",
+  "versions": [
+    {
+      "version": "0.1.0",
+      "path": "/api/v0.1.0/drive.mjs",
+      "sri": "sha384-rippFYqz9WXCSA21KhV7yVGmsJBg7ysrW5XNgvehhYhLOLDCKMfaLYx4lApM9rSq"
+    }
+  ]
+}

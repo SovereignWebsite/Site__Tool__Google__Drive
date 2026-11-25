@@ -1,7 +1,9 @@
 # a.drive now (25 Nov 2026)
 
-- Done: own signing key; wording changed from "files in a shared Drive folder" to "a Drive browser with Google sign-in, in the browser only; a message channel later" (index, llms.txt, README, page heads).
-- Done: /app/ with Connect, Browse, Scopes, Google Cloud set-up, Privacy. Tested here against a mocked Drive API only (list, preview, folder, crumbs); the Google sign-in and the Picker have not run against real Google.
-- Not touched: site/policy/abp.json (a change needs Dinis's yes).
-- Waiting: see agent.json, "Dinis:" lines.
-- Next: docs/drive-lane-v1.md (step 2), after the browser works against a real client.
+- Direction (from Dinis via a.maestro): the API is the product; /app/ is its first user.
+- Done: /api/v0.1.0/drive.mjs (pinned), /api/latest/, /api/versions.json (SRI), changelog and docs at /api/. Sign-in is Google's token flow by redirect, no Google script, token sealed in IndexedDB for its hour. List, search, get, download, export, upload, create folder, move, trash. tools/test-api.mjs and tools/api-release.mjs.
+- Done: /app/ uses the API. Scopes, client options, Google Cloud set-up and privacy pages written for Dinis.
+- Tried only against a mocked Google. Not run against a real client.
+- Not touched: site/policy/abp.json.
+- Waiting: see agent.json, "Dinis:" lines. security.b review of the API design is due before more is built past sign-in.
+- Next: v0.2.0 Sheets as a database; then backup and export; then the lane spec.

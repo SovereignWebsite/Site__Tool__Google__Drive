@@ -1,19 +1,17 @@
 // Drive in the browser. No server of ours: the page talks to Google directly, with the person's own token.
 // The token is kept in sessionStorage (this tab only) with its expiry, and never leaves the browser except to
 // www.googleapis.com. Output is written with textContent only, never innerHTML.
+import { createDrive, FOLDER } from '/api/v0.1.0/drive.mjs';
 (function () {
   'use strict';
   var cfg = window.DRIVE_CONFIG || {};
-  var API = 'https://www.googleapis.com/drive/v3/';
-  var UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
-  var TOKEN_KEY = 'drive.token', PICKED_KEY = 'drive.picked';
-  var FOLDER = 'application/vnd.google-apps.folder';
+  var drive = createDrive({ clientId: cfg.clientId, scope: cfg.scope, redirectUri: location.origin + '/app/connect/' });
+  var PICKED_KEY = 'drive.picked';
   var $ = function (id) { return document.getElementById(id); };
 
-  function store(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) { mem[k] = v; } }
-  function load(k) { try { var s = sessionStorage.getItem(k); return s ? JSON.parse(s) : (mem[k] || null); } catch (e) { return mem[k] || null; } }
   var mem = {};
-  function token() { var t = load(TOKEN_KEY); return t && t.exp > Date.now() + 30000 ? t.value : null; }
+  function store(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) { mem[k] = v; } }
+  function load(k) { try { var x = sessionStorage.getItem(k); return x ? JSON.parse(x) : (mem[k] || null); } catch (e) { return mem[k] || null; } }
   function status(msg, err) { var s = $('status'); if (!s) return; s.textContent = msg || ''; s.className = 'status' + (err ? ' err' : ''); }
   function script(src) { return new Promise(function (ok, no) { var s = document.createElement('script'); s.src = src; s.async = true; s.onload = ok; s.onerror = function () { no(new Error('Could not load ' + src)); }; document.head.appendChild(s); }); }
   function el(tag, text, cls) { var e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; }
@@ -23,61 +21,18 @@
     $('scope').textContent = cfg.scope;
     var ready = !!cfg.clientId;
     $('notready').hidden = ready; $('connect').disabled = !ready;
-    function show() { var on = !!token(); $('disconnect').hidden = !on; if (on) status('Connected. Go to Browse.'); }
-    show();
-    $('connect').addEventListener('click', function () {
-      status('Opening Google sign-in...');
-      script('https://accounts.google.com/gsi/client').then(function () {
-        var tc = google.accounts.oauth2.initTokenClient({
-          client_id: cfg.clientId, scope: cfg.scope,
-          callback: function (r) {
-            if (r.error) { status('Sign-in failed: ' + r.error, true); return; }
-            store(TOKEN_KEY, { value: r.access_token, exp: Date.now() + (Number(r.expires_in) || 3600) * 1000 });
-            location.href = '/app/browse/';
-          },
-          error_callback: function (e) { status('Sign-in did not complete: ' + (e && e.type || 'unknown'), true); }
-        });
-        tc.requestAccessToken({ prompt: '' });
-      }).catch(function (e) { status(e.message, true); });
-    });
-    $('disconnect').addEventListener('click', function () {
-      var t = token(); store(TOKEN_KEY, null); store(PICKED_KEY, null);
-      var done = function () { show(); status('Disconnected.'); };
-      if (t) script('https://accounts.google.com/gsi/client').then(function () { google.accounts.oauth2.revoke(t, done); }, done); else done();
-    });
+    function show() { return drive.isSignedIn().then(function (on) { $('disconnect').hidden = !on; if (on) status('Connected. Go to Browse.'); return on; }); }
+    drive.handleRedirect().then(function (r) { if (r.fresh) location.replace('/app/browse/'); else show(); }, function (e) { status(e.message, true); });
+    $('connect').addEventListener('click', function () { status('Opening Google sign-in...'); try { drive.signIn(); } catch (e) { status(e.message, true); } });
+    $('disconnect').addEventListener('click', function () { store(PICKED_KEY, null); drive.signOut().then(function () { $('disconnect').hidden = true; status('Disconnected.'); }); });
   }
 
-  // ---------- Drive calls ----------
-  function call(url, opts) {
-    var t = token(); if (!t) { store(TOKEN_KEY, null); return Promise.reject(new Error('Your sign-in has ended. Connect again.')); }
-    opts = opts || {}; opts.headers = Object.assign({ Authorization: 'Bearer ' + t }, opts.headers || {});
-    return fetch(url, opts).then(function (r) {
-      if (r.ok) return r;
-      return r.text().then(function (b) { var m = ''; try { m = JSON.parse(b).error.message; } catch (e) { m = r.status + ''; } throw new Error(m); });
-    });
-  }
-  var FIELDS = 'nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink)';
-  function list(q) {
-    var u = API + 'files?pageSize=100&orderBy=folder,name&supportsAllDrives=true&includeItemsFromAllDrives=true&fields=' + encodeURIComponent(FIELDS) + (q ? '&q=' + encodeURIComponent(q) : '');
-    return call(u).then(function (r) { return r.json(); });
-  }
-  function meta(id) { return call(API + 'files/' + encodeURIComponent(id) + '?supportsAllDrives=true&fields=' + encodeURIComponent('id,name,mimeType,size,modifiedTime,webViewLink')).then(function (r) { return r.json(); }); }
-  var NATIVE = { 'application/vnd.google-apps.document': 'application/pdf', 'application/vnd.google-apps.spreadsheet': 'application/pdf', 'application/vnd.google-apps.presentation': 'application/pdf', 'application/vnd.google-apps.drawing': 'image/png' };
-  function content(f) {
-    var id = encodeURIComponent(f.id);
-    var u = NATIVE[f.mimeType] ? API + 'files/' + id + '/export?mimeType=' + encodeURIComponent(NATIVE[f.mimeType]) : API + 'files/' + id + '?alt=media&supportsAllDrives=true';
-    return call(u).then(function (r) { return r.arrayBuffer(); }).then(function (b) { return { bytes: b, type: NATIVE[f.mimeType] || f.mimeType || 'application/octet-stream' }; });
-  }
-  function createFolder(name, parent) {
-    var body = { name: name, mimeType: FOLDER }; if (parent) body.parents = [parent];
-    return call(API + 'files?supportsAllDrives=true&fields=id,name', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); });
-  }
-  function upload(file, parent) {
-    var m = { name: file.name }; if (parent) m.parents = [parent];
-    var b = '----drive' + Math.random().toString(36).slice(2);
-    var body = new Blob(['--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n', JSON.stringify(m), '\r\n--' + b + '\r\nContent-Type: ' + (file.type || 'application/octet-stream') + '\r\n\r\n', file, '\r\n--' + b + '--']);
-    return call(UPLOAD + '?uploadType=multipart&supportsAllDrives=true&fields=id,name', { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: body }).then(function (r) { return r.json(); });
-  }
+  // ---------- Drive calls (all through the API module) ----------
+  var meta = function (id) { return drive.get(id); };
+  var list = function (q) { return q.parent ? drive.list({ parent: q.parent }) : drive.list(); };
+  var content = function (f) { return drive.download(f.id); };
+  var createFolder = function (name, parent) { return drive.createFolder(name, parent); };
+  var upload = function (file, parent) { return drive.upload(file, { name: file.name, parent: parent }); };
 
   // ---------- browse ----------
   function size(n) { n = Number(n); if (!n && n !== 0) return ''; var u = ['B', 'KB', 'MB', 'GB'], i = 0; while (n >= 1024 && i < 3) { n /= 1024; i++; } return (i ? n.toFixed(1) : n) + ' ' + u[i]; }
@@ -85,8 +40,9 @@
   function kind(m) { return m === FOLDER ? 'Folder' : (m || '').indexOf('application/vnd.google-apps.') === 0 ? 'Google ' + m.split('.').pop() : (m || ''); }
 
   function browsePage() {
-    if (!token()) { $('needs').hidden = false; return; }
-    $('work').hidden = false;
+    drive.isSignedIn().then(function (on) { if (!on) { $('needs').hidden = false; return; } $('work').hidden = false; browseInit(); });
+  }
+  function browseInit() {
     var path = []; // [{id,name}]
     var cur = function () { return path.length ? path[path.length - 1].id : null; };
     var mode = 'picked'; // picked | all | folder
@@ -113,8 +69,8 @@
       crumbs(); status('Loading...');
       var tb = document.querySelector('#list tbody'); tb.textContent = '';
       var p;
-      if (mode === 'folder') p = list("'" + cur() + "' in parents and trashed=false").then(function (r) { return r.files; });
-      else if (mode === 'all') p = list('trashed=false').then(function (r) { return r.files; });
+      if (mode === 'folder') p = list({ parent: cur() }).then(function (r) { return r.files; });
+      else if (mode === 'all') p = list({}).then(function (r) { return r.files; });
       else p = Promise.all(pickedIds().map(function (id) { return meta(id).catch(function () { return null; }); })).then(function (a) { return a.filter(Boolean); });
       p.then(function (files) {
         files.forEach(function (f) { tb.appendChild(row(f)); });
@@ -137,7 +93,7 @@
     function download(f) {
       status('Downloading...');
       content(f).then(function (c) {
-        var ext = NATIVE[f.mimeType] ? (c.type === 'image/png' ? '.png' : '.pdf') : '';
+        var ext = c.file && c.file.mimeType.indexOf('application/vnd.google-apps.') === 0 ? ({ 'image/png': '.png', 'text/csv': '.csv', 'application/pdf': '.pdf' }[c.type] || '') : '';
         var u = URL.createObjectURL(new Blob([c.bytes], { type: 'application/octet-stream' })), a = el('a'); a.href = u; a.download = f.name + ext; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 5000); status('Downloaded ' + f.name + ext + '.');
       }).catch(function (e) { status(e.message, true); });
     }
@@ -156,10 +112,10 @@
     });
     $('pick').addEventListener('click', function () {
       if (!cfg.apiKey || !cfg.appId) { status('The Picker needs an API key and an app ID in config.js (see Google Cloud set-up).', true); return; }
-      status('Opening the Google Picker...');
-      script('https://apis.google.com/js/api.js').then(function () { return new Promise(function (ok) { gapi.load('picker', ok); }); }).then(function () {
+      status('Opening the Google Picker...'); var tok;
+      drive.token().then(function (t) { tok = t; return script('https://apis.google.com/js/api.js'); }).then(function () { return new Promise(function (ok) { gapi.load('picker', ok); }); }).then(function () {
         var v = new google.picker.DocsView().setIncludeFolders(true).setSelectFolderEnabled(true);
-        new google.picker.PickerBuilder().addView(v).setOAuthToken(token()).setDeveloperKey(cfg.apiKey).setAppId(cfg.appId)
+        new google.picker.PickerBuilder().addView(v).setOAuthToken(tok).setDeveloperKey(cfg.apiKey).setAppId(cfg.appId)
           .setCallback(function (d) {
             if (d.action === google.picker.Action.PICKED) { var ids = pickedIds(); d.docs.forEach(function (x) { if (ids.indexOf(x.id) < 0) ids.push(x.id); }); store(PICKED_KEY, ids); path = []; mode = 'picked'; render(); }
             else if (d.action === google.picker.Action.CANCEL) status('');

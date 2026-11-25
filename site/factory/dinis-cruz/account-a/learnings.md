@@ -4,3 +4,5 @@
 - drive.file grants per-file access, so "browse" means the files you picked plus what the app made. Whole-Drive browsing needs a restricted scope (a decision for Dinis).
 - The meta CSP on the app pages is wide enough for the Picker (gstatic, apis.google.com) but was not tested against it; loosen or tighten after the first real run.
 - The seed's abp.json says a change to it needs the owner's yes: a blanket find and replace on the old wording touched it, and I reverted that.
+- Gmail tool (per mail.dev.a): token flow by redirect with no Google script, token sealed in a non-extractable IndexedDB key, connect-src limited to Google's API hosts, Internal client. The Drive API copies the flow, not the Internal client: an outside team needs an External client or its own.
+- A pinned API version must never change: tools/api-release.mjs records its SRI and fails if the file differs, and checks latest/ equals the newest version.

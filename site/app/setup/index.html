@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://accounts.google.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com; img-src 'self' blob: data: https:; connect-src https://*.googleapis.com https://accounts.google.com; frame-src https://*.google.com https://content.googleapis.com blob:; font-src https://fonts.gstatic.com https://www.gstatic.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com; img-src 'self' blob: data: https:; connect-src https://*.googleapis.com; frame-src https://*.google.com https://content.googleapis.com blob:; font-src https://fonts.gstatic.com https://www.gstatic.com; base-uri 'none'; form-action 'none'">
 <title>Google Cloud set-up: Sovereign Website Drive, a variation of Google Drive</title>
 <meta name="description" content="The exact Google Cloud values the owner adds so Google sign-in and the Picker work on this site.">
 <meta property="og:type" content="website">
@@ -29,6 +29,7 @@
 <header class="bar">
   <a class="name" href="/">Sovereign Website Drive</a>
   <nav aria-label="This site">
+    <a href="/api/">API</a>
     <a href="/app/connect/">Connect</a>
     <a href="/app/browse/">Browse</a>
     <a href="/app/scopes/">Scopes</a>
@@ -40,7 +41,7 @@
 <h1>Google Cloud set-up</h1>
 <p>These steps are the owner's (Dinis's) to do in Google Cloud. Until they are done, the Connect page says it is not set up. Nothing here is a secret: the browser sign-in flow has no client secret.</p>
 <h2>1. One project, two APIs</h2>
-<p>In the project that holds the Gmail tool's client (or a new one), enable <strong>Google Drive API</strong> and <strong>Google Picker API</strong>.</p>
+<p>The Gmail tool's client is an Internal one in RiskMandate's project, so outside people cannot sign in with it. This tool is for an outside team, so it needs its own <strong>External</strong> client. In a project for it, enable <strong>Google Drive API</strong> and <strong>Google Picker API</strong>.</p>
 <h2>2. OAuth consent screen</h2>
 <ul>
 <li>App name: <code>Sovereign Website Drive</code></li>
@@ -53,7 +54,7 @@
 <h2>3. OAuth client (Web application)</h2>
 <ul>
 <li>Authorised JavaScript origins: <code>https://drive.google.tool.sovereignweb.site</code></li>
-<li>Authorised redirect URIs: none. The Google Identity Services token flow uses a pop-up and needs no redirect.</li>
+<li>Authorised redirect URIs: <code>https://drive.google.tool.sovereignweb.site/app/connect/</code>. The sign-in is Google's OAuth token flow for web apps (a redirect that returns the token in the URL fragment). No Google script is loaded for sign-in.</li>
 <li>Copy the client ID into <code>site/app/config.js</code> as <code>clientId</code> (public value).</li>
 </ul>
 <h2>4. Browser API key (for the Picker)</h2>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://accounts.google.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com; img-src 'self' blob: data: https:; connect-src https://*.googleapis.com https://accounts.google.com; frame-src https://*.google.com https://content.googleapis.com blob:; font-src https://fonts.gstatic.com https://www.gstatic.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com; img-src 'self' blob: data: https:; connect-src https://*.googleapis.com; frame-src https://*.google.com https://content.googleapis.com blob:; font-src https://fonts.gstatic.com https://www.gstatic.com; base-uri 'none'; form-action 'none'">
 <title>Browse: Sovereign Website Drive, a variation of Google Drive</title>
 <meta name="description" content="A Drive browser with Google sign-in, in the browser only. Not affiliated with or endorsed by Google.">
 <meta property="og:type" content="website">
@@ -29,6 +29,7 @@
 <header class="bar">
   <a class="name" href="/">Sovereign Website Drive</a>
   <nav aria-label="This site">
+    <a href="/api/">API</a>
     <a href="/app/connect/">Connect</a>
     <a href="/app/browse/">Browse</a>
     <a href="/app/scopes/">Scopes</a>
@@ -59,6 +60,6 @@
 </main>
 <footer>A sovereign website, made with the <a href="https://sovereignwebsite.org/">open pattern</a>. Not affiliated with or endorsed by Google. Source: <a href="https://github.com/SovereignWebsite/Site__Tool__Google__Drive">github.com/SovereignWebsite/Site__Tool__Google__Drive</a>.</footer>
 <script src="/app/config.js"></script>
-<script src="/app/app.js"></script>
+<script type="module" src="/app/app.js"></script>
 </body>
 </html>
