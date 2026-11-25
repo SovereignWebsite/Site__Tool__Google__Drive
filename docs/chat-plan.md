@@ -50,3 +50,14 @@ See /app/setup/ on this site: the Chat section lists enabling the Chat API, the 
   - Trust: only author keys on the page's own list (never from the entry). A replay, a gap or a fork is refused by the chain. A signed entry of another type or lane advances the chain but is not posted.
   - Tested with a test lane and test keys made in memory (`tools/test-opener.mjs`): untrusted author, wrong type, extra body field, replay, another lane, junk and a wrong recipient key are all refused; good entries reach the relay core.
 - Still not built: reading the lane from the vault server (the endpoint, vault_id and append_token card are with a.maestro), the page, and Dinis's Chrome key store.
+
+## Decision: the relay page makes its own browser key (option a, 25 Nov)
+A browser key belongs to one origin, so the relay page on the Chat site cannot use the CRM's key on the CRM's origin. Two options: (a) the relay page makes its own key in Dinis's Chrome; (b) the relay runs inside the CRM app and imports chat.mjs. **Recommended and chosen: (a).**
+- No key crosses origins, and the Google client needs no extra origin for the CRM.
+- The relay page can only ever read the "for Dinis" lane, so a flaw in the page exposes that lane and the Chat scopes, not the CRM's other lanes, contacts or keys.
+- The cost: Dinis enrols one more public key (shown by the page as a QR or string), and a.maestro re-seals the lane's read key to it.
+- The key: non-extractable RSA-OAEP (to open entries) and ECDSA P-256 (to sign), held in IndexedDB. Passkey gating as in the CRM's You page is a later step; I do not have that code, so I will reuse it if pointed to it.
+- Reading: `chat-staging/relay/lane-client.mjs` (list and fetch as a.maestro described them; paging, 20 files a fetch, retry without the inbox; a read key held in memory only and never in a URL or log; tested against a mock server). dev.send.sgraph.ai answers a CORS preflight with `Access-Control-Allow-Origin: *` and allows `x-sgraph-vault-enum-key`, checked 25 Nov.
+- Trusted authors: starts with one, a.maestro's (lane.entry/2 author key p256:a213b369...6809, published in PrompTugal's board/keys.json); Dinis edits the list in the page.
+- Never in a public file: the lane's append token and read key. They are given to the page at run time (the read key sealed to the page's key).
+- State the page must keep between visits, or it would repost: the seen hashes and the per-author chain state, in IndexedDB. Cleared state means a full replay of the lane; the seen store is what stops duplicates, so losing it is the one way to double-post. The page should say so and offer "mark everything as seen".
