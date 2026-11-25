@@ -9,7 +9,8 @@
     "Dinis: choose the scope on that client: drive.file (default, no review) up to drive (full; Internal clients need no Google review). Say 'a.drive, use <scope>'. Importing sites choose their own; drive.file stays the API default. Trade-offs: /app/scopes/",
     "Dinis: the Picker needs a browser API key and the project number in config.js; optional, the app works without it on files it creates.",
     "Dinis: card image is still the seed's neutral one; say 'a.drive, make the share card' to replace it.",
-    "Dinis (or his partner): for Chat, on the same Internal client enable the Google Chat API, add the Chat scopes, and add origin https://chat.google.tool.sovereignweb.site and redirect https://chat.google.tool.sovereignweb.site/app/connect/. Steps: /app/setup/ (Chat section)."
+    "Dinis (or his partner): for Chat, on the same Internal client enable the Google Chat API, add the Chat scopes, and add origin https://chat.google.tool.sovereignweb.site and redirect https://chat.google.tool.sovereignweb.site/app/connect/. Steps: /app/setup/ (Chat section).",
+    "Dinis: I cannot push to SovereignWebsite/Site__Tool__Google__Chat (attaching it with push access was denied by this session's permission check). Allow it by saying: 'a.drive, you may attach Site__Tool__Google__Chat with push access' and adding the permission rule for add_repo, or tell me another way to get write access. Until then chat-staging/ stays in the Drive repo."
   ],
   "next": [
     "security.b: post-check the commit that answers Drive findings 1, 2, 3 and 6 (then Chat relay page review before it posts to a real space)",
