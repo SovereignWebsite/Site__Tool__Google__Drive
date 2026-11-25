@@ -8,3 +8,4 @@
 - Relay core built against a test lane (chat-staging/relay/relay-core.mjs, tools/test-relay.mjs): allow-list of id, title, link; refuses secrets, contacts and non-https links; dedup; rate limit; pause. The real lane opener waits for the lane card and Dinis's key choice.
 - Next: move chat-staging/ to the Chat repository when it exists, build its app, then the relay after security.b's review and the lane cards.
 - 25 Nov 15:56 UTC (via a.maestro, from Dinis): the relay page runs in his Chrome and uses his Chrome browser key; lane.entry/2 is a yes, a.ios is finalising it. I code the real opener once the spec is published.
+- lane.entry/2 final (a.ios). Reader and opener built in chat-staging/relay/: pass all 5 positive and 13 negative vectors, plus a test lane through the relay core. Not yet: reading the lane from the vault server, the page, Dinis's Chrome key store.

@@ -43,3 +43,10 @@ See /app/setup/ on this site: the Chat section lists enabling the Chat API, the 
 - **Rate limit:** five posts a minute by default; the rest wait for the next tick. A failed post stops the tick.
 - **Pause:** a pause control stops it at once.
 - Still to build: the page (a "posting as" line, the pause button, the log of what was posted), the browser key store, and the real lane opener.
+
+## Lane reader and opener (lane.entry/2, final 25 Nov)
+- `chat-staging/relay/lane-entry-v2.mjs`: a WebCrypto-only reader written against the final spec. It passes the owners' vectors: the canonical case, the five positive and all thirteen negative, each refused with the code given (`tools/test-lane.mjs`; fetch the vectors first, as that file says, because their throwaway keys are not kept here).
+- `chat-staging/relay/lane-opener.mjs`: opens one sealed payload with the page's RSA key and gives the relay `{id, title, link}`. Entry type `needs-you`, body exactly `{title, link}` (proposed here for the lane's readers and writers to agree). The item id is the entry's hash.
+  - Trust: only author keys on the page's own list (never from the entry). A replay, a gap or a fork is refused by the chain. A signed entry of another type or lane advances the chain but is not posted.
+  - Tested with a test lane and test keys made in memory (`tools/test-opener.mjs`): untrusted author, wrong type, extra body field, replay, another lane, junk and a wrong recipient key are all refused; good entries reach the relay core.
+- Still not built: reading the lane from the vault server (the endpoint, vault_id and append_token card are with a.maestro), the page, and Dinis's Chrome key store.
