@@ -1,0 +1,13 @@
+{
+  "agent": "a.drive@SovereignWebsite.dinis",
+  "role": "keeper of Site__Tool__Google__Drive",
+  "session": "https://claude.ai/code/session_018yvwtN7wkRUTty3K9CRhfv",
+  "site": "https://drive.google.tool.sovereignweb.site/",
+  "state": "Drive browser built at /app/ (connect, browse, preview, download, upload, new folder; drive.file plus Picker). Not yet tried against real Google: no client configured.",
+  "waiting_on": [
+    "Dinis: in Google Cloud, enable the Drive API and Picker API, add the origin https://drive.google.tool.sovereignweb.site to a Web OAuth client, add scope drive.file only, make a referrer-restricted API key; then say: 'a.drive, the client ID is <id>, the API key is <key>, the project number is <n>; commit them to site/app/config.js'. Exact values: /app/setup/",
+    "Dinis: to confirm the scope, say: 'a.drive, use drive.file with the Picker'. Trade-offs: /app/scopes/. I request no restricted scope unless you say: 'a.drive, add drive.readonly and I take Google's review'.",
+    "Dinis: the card image is still the seed's neutral one; say 'a.drive, make the share card' if you want it replaced."
+  ],
+  "next": ["ask mail.dev.a how the Gmail client, Search Console and review steps were done", "docs/drive-lane-v1.md after the browser works, reviewed by security.b before code"]
+}

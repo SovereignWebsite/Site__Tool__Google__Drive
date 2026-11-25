@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://accounts.google.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com; img-src 'self' blob: data: https:; connect-src https://*.googleapis.com https://accounts.google.com; frame-src https://*.google.com https://content.googleapis.com blob:; font-src https://fonts.gstatic.com https://www.gstatic.com; base-uri 'none'; form-action 'none'">
+<title>Google Cloud set-up: Sovereign Website Drive, a variation of Google Drive</title>
+<meta name="description" content="The exact Google Cloud values the owner adds so Google sign-in and the Picker work on this site.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sovereign Website Drive, a variation of Google Drive">
+<meta property="og:locale" content="en_GB">
+<meta property="og:url" content="https://drive.google.tool.sovereignweb.site/app/setup/">
+<meta property="og:title" content="Google Cloud set-up: Sovereign Website Drive, a variation of Google Drive">
+<meta property="og:description" content="The exact Google Cloud values the owner adds so Google sign-in and the Picker work on this site.">
+<meta property="og:image" content="https://drive.google.tool.sovereignweb.site/assets/share/card-1200x630.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Sovereign Website Drive, a variation of Google Drive">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Google Cloud set-up: Sovereign Website Drive, a variation of Google Drive">
+<meta name="twitter:description" content="The exact Google Cloud values the owner adds so Google sign-in and the Picker work on this site.">
+<meta name="twitter:image" content="https://drive.google.tool.sovereignweb.site/assets/share/card-1200x630.jpg">
+<link rel="canonical" href="https://drive.google.tool.sovereignweb.site/app/setup/">
+<link rel="stylesheet" href="/app/app.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar">
+  <a class="name" href="/">Sovereign Website Drive</a>
+  <nav aria-label="This site">
+    <a href="/app/connect/">Connect</a>
+    <a href="/app/browse/">Browse</a>
+    <a href="/app/scopes/">Scopes</a>
+    <a href="/app/setup/">Google Cloud set-up</a>
+    <a href="/app/privacy/">Privacy</a>
+  </nav>
+</header>
+<main id="main">
+<h1>Google Cloud set-up</h1>
+<p>These steps are the owner's (Dinis's) to do in Google Cloud. Until they are done, the Connect page says it is not set up. Nothing here is a secret: the browser sign-in flow has no client secret.</p>
+<h2>1. One project, two APIs</h2>
+<p>In the project that holds the Gmail tool's client (or a new one), enable <strong>Google Drive API</strong> and <strong>Google Picker API</strong>.</p>
+<h2>2. OAuth consent screen</h2>
+<ul>
+<li>App name: <code>Sovereign Website Drive</code></li>
+<li>Authorised domain: <code>sovereignweb.site</code> (already verified in Search Console if the Gmail tool's client uses it)</li>
+<li>Home page: <code>https://drive.google.tool.sovereignweb.site/</code></li>
+<li>Privacy policy: <code>https://drive.google.tool.sovereignweb.site/app/privacy/</code></li>
+<li>Scope to add: <code>https://www.googleapis.com/auth/drive.file</code> and nothing else</li>
+<li>Publishing status: In production. In Testing, tokens last 7 days and only listed test users can sign in.</li>
+</ul>
+<h2>3. OAuth client (Web application)</h2>
+<ul>
+<li>Authorised JavaScript origins: <code>https://drive.google.tool.sovereignweb.site</code></li>
+<li>Authorised redirect URIs: none. The Google Identity Services token flow uses a pop-up and needs no redirect.</li>
+<li>Copy the client ID into <code>site/app/config.js</code> as <code>clientId</code> (public value).</li>
+</ul>
+<h2>4. Browser API key (for the Picker)</h2>
+<ul>
+<li>Application restriction: HTTP referrers, <code>https://drive.google.tool.sovereignweb.site/*</code></li>
+<li>API restriction: Google Picker API</li>
+<li>Copy it into <code>config.js</code> as <code>apiKey</code>, and the project number as <code>appId</code>.</li>
+</ul>
+<h2>What the agent does next</h2>
+<p>Once the three public values are in <code>config.js</code> (an agent can commit them when Dinis gives them), the Connect and Browse pages work end to end. Until then they have not been tried against Google.</p>
+</main>
+<footer>A sovereign website, made with the <a href="https://sovereignwebsite.org/">open pattern</a>. Not affiliated with or endorsed by Google. Source: <a href="https://github.com/SovereignWebsite/Site__Tool__Google__Drive">github.com/SovereignWebsite/Site__Tool__Google__Drive</a>.</footer>
+
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://accounts.google.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com; img-src 'self' blob: data: https:; connect-src https://*.googleapis.com https://accounts.google.com; frame-src https://*.google.com https://content.googleapis.com blob:; font-src https://fonts.gstatic.com https://www.gstatic.com; base-uri 'none'; form-action 'none'">
+<title>Connect with Google: Sovereign Website Drive, a variation of Google Drive</title>
+<meta name="description" content="A Drive browser with Google sign-in, in the browser only. Not affiliated with or endorsed by Google.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sovereign Website Drive, a variation of Google Drive">
+<meta property="og:locale" content="en_GB">
+<meta property="og:url" content="https://drive.google.tool.sovereignweb.site/app/connect/">
+<meta property="og:title" content="Connect with Google: Sovereign Website Drive, a variation of Google Drive">
+<meta property="og:description" content="A Drive browser with Google sign-in, in the browser only. Not affiliated with or endorsed by Google.">
+<meta property="og:image" content="https://drive.google.tool.sovereignweb.site/assets/share/card-1200x630.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Sovereign Website Drive, a variation of Google Drive">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Connect with Google: Sovereign Website Drive, a variation of Google Drive">
+<meta name="twitter:description" content="A Drive browser with Google sign-in, in the browser only. Not affiliated with or endorsed by Google.">
+<meta name="twitter:image" content="https://drive.google.tool.sovereignweb.site/assets/share/card-1200x630.jpg">
+<link rel="canonical" href="https://drive.google.tool.sovereignweb.site/app/connect/">
+<link rel="stylesheet" href="/app/app.css">
+</head>
+<body data-page="connect">
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar">
+  <a class="name" href="/">Sovereign Website Drive</a>
+  <nav aria-label="This site">
+    <a href="/app/connect/">Connect</a>
+    <a href="/app/browse/">Browse</a>
+    <a href="/app/scopes/">Scopes</a>
+    <a href="/app/setup/">Google Cloud set-up</a>
+    <a href="/app/privacy/">Privacy</a>
+  </nav>
+</header>
+<main id="main">
+<h1>Connect with Google</h1>
+<p>This signs you in with Google in this browser tab only. The access token is kept for this tab (it is gone when you close it, and in about an hour in any case). Nothing is sent to any server of ours.</p>
+<div class="card">
+<p><strong>Access asked for:</strong> <code id="scope"></code></p>
+<p>With this scope the app sees only the files and folders you pick for it (with the Google Picker) and the files it creates. It cannot see the rest of your Drive. <a href="/app/scopes/">Scopes, trade-offs and the alternative</a>.</p>
+<div class="row"><button id="connect" type="button">Connect with Google</button><button id="disconnect" type="button" class="quiet" hidden>Disconnect</button></div>
+<p id="status" class="status" role="status" aria-live="polite"></p>
+</div>
+<div id="notready" class="card" hidden>
+<h2>Not set up yet</h2>
+<p>This site has no Google client configured, so sign-in cannot start. The owner adds one in Google Cloud: <a href="/app/setup/">the exact values are here</a>.</p>
+</div>
+</main>
+<footer>A sovereign website, made with the <a href="https://sovereignwebsite.org/">open pattern</a>. Not affiliated with or endorsed by Google. Source: <a href="https://github.com/SovereignWebsite/Site__Tool__Google__Drive">github.com/SovereignWebsite/Site__Tool__Google__Drive</a>.</footer>
+<script src="/app/config.js"></script>
+<script src="/app/app.js"></script>
+</body>
+</html>

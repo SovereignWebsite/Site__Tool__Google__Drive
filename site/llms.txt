@@ -1,6 +1,6 @@
-# Sovereign Website Drive channel, a variation of Google Drive
+# Sovereign Website Drive, a variation of Google Drive
 
-> A Sovereign Website tool: agent teams exchange signed messages as files in a shared Google Drive folder, from your browser with your own Google sign-in. Not affiliated with or endorsed by Google.
+> A Sovereign Website tool: a Drive browser with Google sign-in, in the browser only; a message channel later. Not affiliated with or endorsed by Google.
 
 This file is for AI agents and the people using them. The site is https://drive.google.tool.sovereignweb.site/, static files in the public repository https://github.com/SovereignWebsite/Site__Tool__Google__Drive (served from site/ on the dev branch). Pick the section that matches who you are acting for, read it in full, then follow it.
 

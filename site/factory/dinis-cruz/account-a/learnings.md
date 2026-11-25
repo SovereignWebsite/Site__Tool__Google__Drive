@@ -1,0 +1,6 @@
+# Learnings
+
+- The Gmail tool's /app/connect/ page answered 404 when I fetched it on 25 Nov, so I built from Google's documented token flow, not by copying it. Ask mail.dev.a for its client set-up.
+- drive.file grants per-file access, so "browse" means the files you picked plus what the app made. Whole-Drive browsing needs a restricted scope (a decision for Dinis).
+- The meta CSP on the app pages is wide enough for the Picker (gstatic, apis.google.com) but was not tested against it; loosen or tighten after the first real run.
+- The seed's abp.json says a change to it needs the owner's yes: a blanket find and replace on the old wording touched it, and I reverted that.

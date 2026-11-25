@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://accounts.google.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com; img-src 'self' blob: data: https:; connect-src https://*.googleapis.com https://accounts.google.com; frame-src https://*.google.com https://content.googleapis.com blob:; font-src https://fonts.gstatic.com https://www.gstatic.com; base-uri 'none'; form-action 'none'">
+<title>Scopes: what each gives and costs: Sovereign Website Drive, a variation of Google Drive</title>
+<meta name="description" content="What each Google Drive access scope gives, what it costs to get, and which one we recommend.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sovereign Website Drive, a variation of Google Drive">
+<meta property="og:locale" content="en_GB">
+<meta property="og:url" content="https://drive.google.tool.sovereignweb.site/app/scopes/">
+<meta property="og:title" content="Scopes: what each gives and costs: Sovereign Website Drive, a variation of Google Drive">
+<meta property="og:description" content="What each Google Drive access scope gives, what it costs to get, and which one we recommend.">
+<meta property="og:image" content="https://drive.google.tool.sovereignweb.site/assets/share/card-1200x630.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Sovereign Website Drive, a variation of Google Drive">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Scopes: what each gives and costs: Sovereign Website Drive, a variation of Google Drive">
+<meta name="twitter:description" content="What each Google Drive access scope gives, what it costs to get, and which one we recommend.">
+<meta name="twitter:image" content="https://drive.google.tool.sovereignweb.site/assets/share/card-1200x630.jpg">
+<link rel="canonical" href="https://drive.google.tool.sovereignweb.site/app/scopes/">
+<link rel="stylesheet" href="/app/app.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar">
+  <a class="name" href="/">Sovereign Website Drive</a>
+  <nav aria-label="This site">
+    <a href="/app/connect/">Connect</a>
+    <a href="/app/browse/">Browse</a>
+    <a href="/app/scopes/">Scopes</a>
+    <a href="/app/setup/">Google Cloud set-up</a>
+    <a href="/app/privacy/">Privacy</a>
+  </nav>
+</header>
+<main id="main">
+<h1>Scopes: what each gives and costs</h1>
+<p>A scope is the access Google asks you to grant. Pick the smallest that does the job. This page is the owner's decision record; the recommendation is at the end.</p>
+<table>
+<caption class="status">Drive scopes, as Google classes them (check Google's current scope table before relying on this)</caption>
+<thead><tr><th scope="col">Scope</th><th scope="col">What the app can do</th><th scope="col">Google's class</th><th scope="col">What it costs us</th></tr></thead>
+<tbody>
+<tr><td><code>drive.file</code> with the Google Picker</td><td>Only files and folders you pick for it, and files it creates. Browse, preview, download and upload inside those. It cannot list the rest of your Drive.</td><td>Non-sensitive</td><td>The OAuth consent screen and branding checks only. No restricted-scope review. Works for a team that shares one folder: each person picks it once.</td></tr>
+<tr><td><code>drive.readonly</code></td><td>List and read every file in your Drive. No upload, no new folder.</td><td>Restricted</td><td>Google's verification, and possibly an independent security assessment (Google's rule turns on whether restricted data can reach a server; a browser-only app may be treated differently, but only Google decides, so we would ask before building on it).</td></tr>
+<tr><td><code>drive</code></td><td>Everything above, plus change and delete anything in your Drive.</td><td>Restricted</td><td>The same review, and the highest risk to users if the page were ever compromised.</td></tr>
+<tr><td><code>drive.metadata.readonly</code></td><td>File names and metadata only, no content.</td><td>Restricted</td><td>The same review for less use.</td></tr>
+</tbody></table>
+<h2>What drive.file cannot do</h2>
+<ul>
+<li>It cannot browse your whole Drive. You open the Picker and choose what the app may use.</li>
+<li>Picking a folder grants that folder. Files inside it that someone else put there may not be listed until you pick them too. A file the app creates in it is visible to the app.</li>
+<li>A person who joins later has to pick the shared folder in their own browser. Sharing the folder in Drive is still done in Drive.</li>
+</ul>
+<h2>Recommendation to Dinis</h2>
+<p><strong>Ship with <code>drive.file</code> and the Picker.</strong> It is enough for the message channel (a lane is one shared folder that each person picks) and for a team that works in a few shared folders. It avoids the restricted-scope review altogether, and a page compromise exposes only what each person picked. Add <code>drive.readonly</code> only if people truly need to browse their whole Drive, and only after you decide to take on Google's review. This app requests no restricted scope.</p>
+</main>
+<footer>A sovereign website, made with the <a href="https://sovereignwebsite.org/">open pattern</a>. Not affiliated with or endorsed by Google. Source: <a href="https://github.com/SovereignWebsite/Site__Tool__Google__Drive">github.com/SovereignWebsite/Site__Tool__Google__Drive</a>.</footer>
+
+</body>
+</html>
