@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com; img-src 'self' blob: data: https:; connect-src https://*.googleapis.com; frame-src https://*.google.com https://content.googleapis.com blob:; font-src https://fonts.gstatic.com https://www.gstatic.com; base-uri 'none'; form-action 'none'">
 <title>Google Cloud set-up: Sovereign Website Drive, a variation of Google Drive</title>
-<meta name="description" content="The exact Google Cloud values the owner adds so Google sign-in and the Picker work on this site.">
+<meta name="description" content="A step by step guide, for a non-developer, to making the Google sign-in client this site needs, for our own Internal client or for a team bringing its own.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Sovereign Website Drive, a variation of Google Drive">
 <meta property="og:locale" content="en_GB">
 <meta property="og:url" content="https://drive.google.tool.sovereignweb.site/app/setup/">
 <meta property="og:title" content="Google Cloud set-up: Sovereign Website Drive, a variation of Google Drive">
-<meta property="og:description" content="The exact Google Cloud values the owner adds so Google sign-in and the Picker work on this site.">
+<meta property="og:description" content="A step by step guide, for a non-developer, to making the Google sign-in client this site needs, for our own Internal client or for a team bringing its own.">
 <meta property="og:image" content="https://drive.google.tool.sovereignweb.site/assets/share/card-1200x630.jpg">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
@@ -19,7 +19,7 @@
 <meta property="og:image:alt" content="Sovereign Website Drive, a variation of Google Drive">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Google Cloud set-up: Sovereign Website Drive, a variation of Google Drive">
-<meta name="twitter:description" content="The exact Google Cloud values the owner adds so Google sign-in and the Picker work on this site.">
+<meta name="twitter:description" content="A step by step guide, for a non-developer, to making the Google sign-in client this site needs, for our own Internal client or for a team bringing its own.">
 <meta name="twitter:image" content="https://drive.google.tool.sovereignweb.site/assets/share/card-1200x630.jpg">
 <link rel="canonical" href="https://drive.google.tool.sovereignweb.site/app/setup/">
 <link rel="stylesheet" href="/app/app.css">
@@ -38,33 +38,70 @@
   </nav>
 </header>
 <main id="main">
-<h1>Google Cloud set-up</h1>
-<p>These steps are the owner's (Dinis's) to do in Google Cloud. Until they are done, the Connect page says it is not set up. Nothing here is a secret: the browser sign-in flow has no client secret.</p>
-<h2>1. One project, two APIs</h2>
-<p>The Gmail tool's client is an Internal one in RiskMandate's project, so outside people cannot sign in with it. This tool is for an outside team, so it needs its own <strong>External</strong> client. In a project for it, enable <strong>Google Drive API</strong> and <strong>Google Picker API</strong>.</p>
-<h2>2. OAuth consent screen</h2>
+<h1>Google Cloud set-up, step by step</h1>
+<p>This is a guide for someone who is not a developer. You make one thing in the Google Cloud console: a <strong>client</strong>, which is a name tag that tells Google "this website may ask people to sign in". It takes about fifteen minutes. Google renames its screens now and then; if a name below is not on your screen, look for the nearest one.</p>
+<div class="card"><h2>Only one thing leaves the console: the client ID</h2>
+<p>The sign-in here needs the <strong>client ID</strong> and nothing else. It looks like <code>123456-abc.apps.googleusercontent.com</code>. It is public by design: it sits in the page's code. Google also shows a <strong>client secret</strong> when you make the client. <strong>You do not need it, never copy it, and never send it to anyone</strong>, us included. Nothing secret is ever sent to us.</p></div>
+<h2>Which case are you?</h2>
 <ul>
-<li>App name: <code>Sovereign Website Drive</code></li>
-<li>Authorised domain: <code>sovereignweb.site</code> (an External app's branding check may need the domain verified in Google Search Console; the Gmail tool's Internal client skipped this, so Dinis verifies it if Google asks)</li>
-<li>Home page: <code>https://drive.google.tool.sovereignweb.site/</code></li>
-<li>Privacy policy: <code>https://drive.google.tool.sovereignweb.site/app/privacy/</code></li>
-<li>Scope to add: <code>https://www.googleapis.com/auth/drive.file</code> and nothing else</li>
-<li>Publishing status: In production. In Testing, tokens last 7 days and only listed test users can sign in.</li>
+<li><strong>A. Our own Internal client.</strong> You administer a Google Workspace and make the client for this site (drive.google.tool.sovereignweb.site). Only people with accounts in your Workspace can sign in.</li>
+<li><strong>B. An outside team using the API on its own website.</strong> You make a client for your website, and your website imports the <a href="/api/">Drive API</a>. Anyone with a Google account can sign in (External), or only your organisation (Internal).</li>
 </ul>
-<h2>3. OAuth client (Web application)</h2>
+<p>The steps are the same for both. The differences are marked A and B.</p>
+<h2>Step 1. The project</h2>
+<ol>
+<li>Open <a href="https://console.cloud.google.com/">console.cloud.google.com</a> and sign in. <strong>A:</strong> use an administrator account of the Workspace. <strong>B:</strong> use any account your team controls.</li>
+<li>At the top, click the project name, then <strong>New project</strong>. Name it, for example, <code>Drive sign-in</code>.</li>
+<li><strong>A:</strong> under <strong>Organisation</strong>, pick your Workspace's organisation. An Internal client only works inside an organisation.</li>
+<li>Click <strong>Create</strong>, then make sure the new project is the one selected at the top.</li>
+<li>Menu, <strong>APIs and services</strong>, <strong>Library</strong>. Search <strong>Google Drive API</strong>, open it, click <strong>Enable</strong>. (Only if you will use the optional file Picker: also enable <strong>Google Picker API</strong>.)</li>
+</ol>
+<h2>Step 2. The consent screen</h2>
+<p>This is the page people see when they sign in. Menu, <strong>Google Auth platform</strong> (older consoles: <strong>APIs and services</strong>, <strong>OAuth consent screen</strong>). Click <strong>Get started</strong> and fill in:</p>
 <ul>
-<li>Authorised JavaScript origins: <code>https://drive.google.tool.sovereignweb.site</code></li>
-<li>Authorised redirect URIs: <code>https://drive.google.tool.sovereignweb.site/app/connect/</code>. The sign-in is Google's OAuth token flow for web apps (a redirect that returns the token in the URL fragment). No Google script is loaded for sign-in.</li>
-<li>Copy the client ID into <code>site/app/config.js</code> as <code>clientId</code> (public value).</li>
+<li><strong>App name:</strong> A: <code>Sovereign Website Drive</code>. B: your product's name.</li>
+<li><strong>User support email:</strong> your own address.</li>
+<li><strong>Audience:</strong> A: <strong>Internal</strong>. B: <strong>External</strong> for anyone with a Google account, or <strong>Internal</strong> if your whole team is in one Workspace you administer.</li>
+<li><strong>Contact email:</strong> your own address.</li>
+<li><strong>Branding</strong> (Google asks for these for External apps; fill them in anyway): <strong>Home page</strong>, A: <code>https://drive.google.tool.sovereignweb.site/</code>, B: your site's home page. <strong>Privacy policy</strong>, A: <code>https://drive.google.tool.sovereignweb.site/app/privacy/</code>, B: your own privacy page, which must say you do not keep Drive data. <strong>Authorised domain:</strong> A: <code>sovereignweb.site</code>. B: your site's domain.</li>
 </ul>
-<h2>4. Browser API key (for the Picker)</h2>
+<h2>Step 3. The scopes (what the app may do)</h2>
+<p>Menu, <strong>Google Auth platform</strong>, <strong>Data access</strong>, <strong>Add or remove scopes</strong>. Add only what you need. The most power you give is the most you risk if a page were ever broken into.</p>
+<table><caption class="status">What each scope gives, and what it costs in Google's review (Google changes these rules; check its current page before relying on this)</caption>
+<thead><tr><th scope="col">Scope</th><th scope="col">What the app can do</th><th scope="col">Internal</th><th scope="col">External</th></tr></thead><tbody>
+<tr><td><code>drive.file</code></td><td>Only files it creates or that the person picks.</td><td>No review.</td><td>Not a sensitive scope: no restricted review. Google may still check your branding.</td></tr>
+<tr><td><code>drive.readonly</code></td><td>Read every file in the Drive.</td><td>No review.</td><td>Restricted. Google verifies the app, and a public app usually needs a yearly security assessment, which costs money. While the app is in Testing, up to 100 listed test users can use it with a warning screen, and no review.</td></tr>
+<tr><td><code>drive</code></td><td>Read, change and trash anything in the Drive.</td><td>No review.</td><td>Restricted, as above.</td></tr>
+</tbody></table>
+<p>The full list of scope addresses is <code>https://www.googleapis.com/auth/drive.file</code>, <code>.../auth/drive.readonly</code> and <code>.../auth/drive</code>. If unsure, choose <code>drive.file</code> only. Which scope the owner of site A chooses is Dinis's decision (<a href="/app/scopes/">the trade-offs</a>).</p>
+<h2>Step 4. The client (Web application)</h2>
+<ol>
+<li>Menu, <strong>Google Auth platform</strong>, <strong>Clients</strong>, <strong>Create client</strong>.</li>
+<li><strong>Application type:</strong> <strong>Web application</strong>. Name it anything.</li>
+<li><strong>Authorised JavaScript origins</strong>, <strong>Add URI</strong>. A: <code>https://drive.google.tool.sovereignweb.site</code>. B: your website's address with no path, for example <code>https://yourteam.example</code>. It must be https, with no slash at the end.</li>
+<li><strong>Authorised redirect URIs</strong>, <strong>Add URI</strong>. A: <code>https://drive.google.tool.sovereignweb.site/app/connect/</code>. B: the page on your site that finishes sign-in, for example <code>https://yourteam.example/connect/</code>, exactly as your code passes it as <code>redirectUri</code>. A slash at the end counts.</li>
+<li>Click <strong>Create</strong>. Google shows the <strong>Client ID</strong> and a <strong>Client secret</strong>. Copy the Client ID. Leave the secret alone.</li>
+</ol>
+<h2>Step 5. Where to paste the client ID</h2>
 <ul>
-<li>Application restriction: HTTP referrers, <code>https://drive.google.tool.sovereignweb.site/*</code></li>
-<li>API restriction: Google Picker API</li>
-<li>Copy it into <code>config.js</code> as <code>apiKey</code>, and the project number as <code>appId</code>.</li>
+<li><strong>A:</strong> give the client ID to Dinis in his session, in these words: <em>"a.drive, the client ID is [the ID]; commit it to site/app/config.js"</em>. It is a public value, so a chat message is fine. (An agent then puts it in <code>site/app/config.js</code> as <code>clientId</code>.)</li>
+<li><strong>B:</strong> put it in your own page's code: <code>createDrive({ clientId: '[the ID]', redirectUri: location.origin + '/connect/' })</code>. The examples are on <a href="/api/">the API page</a>.</li>
+<li>Optional, for the file Picker only: a browser API key restricted to your site (<strong>APIs and services</strong>, <strong>Credentials</strong>, <strong>Create credentials</strong>, <strong>API key</strong>) and the project number (project settings). The app works without them, on files it creates.</li>
 </ul>
-<h2>What the agent does next</h2>
-<p>Once the three public values are in <code>config.js</code> (an agent can commit them when Dinis gives them), the Connect and Browse pages work end to end. Until then they have not been tried against Google.</p>
+<h2>Step 6. Check that sign-in works</h2>
+<ol>
+<li>Open the page (A: <a href="/app/connect/">/app/connect/</a>) in a normal browser window and press <strong>Connect with Google</strong>.</li>
+<li>Choose a Google account. For an Internal client, it must be in your Workspace.</li>
+<li>Google shows what the app asks for. Allow it. You should land on the Browse page with no error.</li>
+</ol>
+<table><caption class="status">If Google shows an error</caption>
+<thead><tr><th scope="col">What it says</th><th scope="col">What it means</th></tr></thead><tbody>
+<tr><td><code>redirect_uri_mismatch</code></td><td>The redirect in step 4 is not exactly the one the page uses. Check https, spelling and the slash at the end.</td></tr>
+<tr><td><code>origin_mismatch</code></td><td>The origin in step 4 is wrong or has a path or slash on the end.</td></tr>
+<tr><td><code>org_internal</code> or "only users in the organisation"</td><td>The client is Internal and this account is outside the Workspace. Use an account inside it, or make the audience External.</td></tr>
+<tr><td>"Google hasn't verified this app" or "access blocked"</td><td>External client, not in production or the scope needs review. Add the person as a test user, or use <code>drive.file</code>.</td></tr>
+<tr><td>"Drive API has not been used in project"</td><td>Step 1, last item: enable the Google Drive API in this project, wait a minute, try again.</td></tr>
+</tbody></table>
 </main>
 <footer>A sovereign website, made with the <a href="https://sovereignwebsite.org/">open pattern</a>. Not affiliated with or endorsed by Google. Source: <a href="https://github.com/SovereignWebsite/Site__Tool__Google__Drive">github.com/SovereignWebsite/Site__Tool__Google__Drive</a>.</footer>
 

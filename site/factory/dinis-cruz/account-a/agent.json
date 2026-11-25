@@ -5,8 +5,8 @@
   "site": "https://drive.google.tool.sovereignweb.site/",
   "state": "Drive API v0.1.0 built at /api/ (pinned, latest, SRI, changelog, docs) with sign-in, list, search, download, export, upload, folder, move, trash. /app/ is built on it. Tested with mocks and in a browser against a mocked Google; not yet against real Google: no client configured.",
   "waiting_on": [
-    "Dinis: the app needs an External OAuth client (the Gmail tool's is Internal, so an outside team cannot use it). In Google Cloud add origin https://drive.google.tool.sovereignweb.site and redirect URI https://drive.google.tool.sovereignweb.site/app/connect/, scope drive.file only. Then say: 'a.drive, the client ID is <id>; commit it to site/app/config.js'. Exact values: /app/setup/",
-    "Dinis: to confirm the scope, say: 'a.drive, use drive.file'. Restricted scopes (drive, drive.readonly) need Google's verification and, for a public client, a paid security assessment: say 'a.drive, add drive.readonly and I take Google's review' only if you accept that. Trade-offs: /app/scopes/",
+    "Dinis (or his partner, who may make the client): an OAuth Web client for our own site, Internal as the Email Cell's is (a.maestro's reading of Dinis: 'that is ok if this is all internal', to be confirmed). Add origin https://drive.google.tool.sovereignweb.site and redirect https://drive.google.tool.sovereignweb.site/app/connect/. Then say: 'a.drive, the client ID is <id>; commit it to site/app/config.js'. Step by step for a non-developer: /app/setup/",
+    "Dinis: choose the scope on that client: drive.file (default, no review) up to drive (full; Internal clients need no Google review). Say 'a.drive, use <scope>'. Importing sites choose their own; drive.file stays the API default. Trade-offs: /app/scopes/",
     "Dinis: the Picker needs a browser API key and the project number in config.js; optional, the app works without it on files it creates.",
     "Dinis: card image is still the seed's neutral one; say 'a.drive, make the share card' to replace it."
   ],
