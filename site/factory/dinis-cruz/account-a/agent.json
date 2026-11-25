@@ -3,16 +3,17 @@
   "role": "keeper of Site__Tool__Google__Drive",
   "session": "https://claude.ai/code/session_018yvwtN7wkRUTty3K9CRhfv",
   "site": "https://drive.google.tool.sovereignweb.site/",
-  "state": "Drive API v0.1.0 built at /api/ (pinned, latest, SRI, changelog, docs) with sign-in, list, search, download, export, upload, folder, move, trash. /app/ is built on it. Tested with mocks and in a browser against a mocked Google; not yet against real Google: no client configured.",
+  "state": "Drive API v0.2.0 (latest) on a shared Google base; v0.1.0 pinned. /app/ on v0.1.0. Chat: chat.mjs v0.1.0 built and tested against a mock in chat-staging/, plan in docs/chat-plan.md; waiting for the Chat repository to move it. Nothing has run against real Google.",
   "waiting_on": [
     "Dinis (or his partner, who may make the client): an OAuth Web client for our own site, Internal as the Email Cell's is (a.maestro's reading of Dinis: 'that is ok if this is all internal', to be confirmed). Add origin https://drive.google.tool.sovereignweb.site and redirect https://drive.google.tool.sovereignweb.site/app/connect/. Then say: 'a.drive, the client ID is <id>; commit it to site/app/config.js'. Step by step for a non-developer: /app/setup/",
     "Dinis: choose the scope on that client: drive.file (default, no review) up to drive (full; Internal clients need no Google review). Say 'a.drive, use <scope>'. Importing sites choose their own; drive.file stays the API default. Trade-offs: /app/scopes/",
     "Dinis: the Picker needs a browser API key and the project number in config.js; optional, the app works without it on files it creates.",
-    "Dinis: card image is still the seed's neutral one; say 'a.drive, make the share card' to replace it."
+    "Dinis: card image is still the seed's neutral one; say 'a.drive, make the share card' to replace it.",
+    "Dinis (or his partner): for Chat, on the same Internal client enable the Google Chat API, add the Chat scopes, and add origin https://chat.google.tool.sovereignweb.site and redirect https://chat.google.tool.sovereignweb.site/app/connect/. Steps: /app/setup/ (Chat section)."
   ],
   "next": [
-    "security.b reviews the API design before I build past sign-in (a.maestro to route: I hold no session link)",
-    "v0.2.0: Sheets as a database (create, read and append rows as JSON), resumable upload",
-    "then backup and export helpers, then docs/drive-lane-v1.md"
+    "a.factory: tell me when SovereignWebsite/Site__Tool__Google__Chat exists, then I move chat-staging/ there and build its /app/",
+    "security.b: review docs/chat-plan.md (via a.maestro) before the relay is built",
+    "a.maestro: the lane cards for the relay"
   ]
 }

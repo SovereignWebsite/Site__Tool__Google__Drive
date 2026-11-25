@@ -40,6 +40,10 @@
 <main id="main">
 <h1>Changelog</h1>
 <p>Pinned versions never change. <code>/api/latest/</code> moves only when a release is added here.</p>
+<h2>v0.2.0, 25 November 2026</h2>
+<ul><li>The same calls as v0.1.0, now built on the shared Google base that the Chat API also uses (sign-in, token sealing, errors). <code>DriveError</code> now extends <code>GoogleError</code>.</li>
+<li>Still one file with one hash: the base is inlined when the module is built.</li>
+<li>Tested against a mocked Google only.</li></ul>
 <h2>v0.1.0, 25 November 2026</h2>
 <ul><li>Sign-in with Google's token flow (redirect, state check), the token sealed in IndexedDB for its hour.</li>
 <li>List, search, get, download, export, upload, create folder, move, trash.</li>

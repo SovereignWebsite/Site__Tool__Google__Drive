@@ -102,6 +102,16 @@
 <tr><td>"Google hasn't verified this app" or "access blocked"</td><td>External client, not in production or the scope needs review. Add the person as a test user, or use <code>drive.file</code>.</td></tr>
 <tr><td>"Drive API has not been used in project"</td><td>Step 1, last item: enable the Google Drive API in this project, wait a minute, try again.</td></tr>
 </tbody></table>
+<h2>Extra: the Chat tool (chat.google.tool.sovereignweb.site)</h2>
+<p>The Chat tool signs in the same way and can share the client you made in Step 4, in the same project. Add these. <strong>A:</strong> the Chat tool is for people in the same Workspace, so the Internal audience fits. Google Chat's API works with Workspace accounts.</p>
+<ol>
+<li>Step 1, last item: also enable <strong>Google Chat API</strong> (Library, search "Google Chat API", Enable).</li>
+<li>If Google asks you to set up the Chat API's configuration page (Google Chat API, <strong>Configuration</strong>), give the app a name such as <code>Sovereign Website Chat</code> and a short description, and leave the interactive features off. Google may or may not ask for this when people sign in as themselves.</li>
+<li>Step 3: add the Chat scopes <code>.../auth/chat.spaces.readonly</code>, <code>.../auth/chat.messages.readonly</code> and <code>.../auth/chat.messages.create</code>. Google changes its scope names, so pick the nearest ones from its list and tell the agent which.</li>
+<li>Step 4: on the same client, add the origin <code>https://chat.google.tool.sovereignweb.site</code> and the redirect <code>https://chat.google.tool.sovereignweb.site/app/connect/</code>.</li>
+<li>Nothing else changes: still only the client ID, and no secret. Do not create a key or a service account for the Chat tool; people sign in as themselves in their browser.</li>
+</ol>
+
 </main>
 <footer>A sovereign website, made with the <a href="https://sovereignwebsite.org/">open pattern</a>. Not affiliated with or endorsed by Google. Source: <a href="https://github.com/SovereignWebsite/Site__Tool__Google__Drive">github.com/SovereignWebsite/Site__Tool__Google__Drive</a>.</footer>
 

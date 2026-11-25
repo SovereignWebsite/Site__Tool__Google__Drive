@@ -42,11 +42,11 @@
 <p>One ES module with no dependencies, served from this site. Any website can import it to sign people in with Google and use their Drive, from their own browser. There is no server of ours in the path and no telemetry. The <a href="/app/browse/">Drive browser</a> is built on it.</p>
 <h2>Versions</h2>
 <ul>
-<li><strong>Pinned:</strong> <code>https://drive.google.tool.sovereignweb.site/api/v0.1.0/drive.mjs</code>. Never changes once released.</li>
+<li><strong>Pinned:</strong> <code>https://drive.google.tool.sovereignweb.site/api/v0.2.0/drive.mjs</code> (or v0.1.0). Never changes once released.</li>
 <li><strong>Latest:</strong> <code>https://drive.google.tool.sovereignweb.site/api/latest/drive.mjs</code>. Moves only on a release, so it can break you. Pin in production.</li>
 <li>Hashes for every version: <a href="/api/versions.json">/api/versions.json</a>. Changes: <a href="/api/changelog/">changelog</a>.</li>
 </ul>
-<p>v0.1.0 SRI: <code>sha384-rippFYqz9WXCSA21KhV7yVGmsJBg7ysrW5XNgvehhYhLOLDCKMfaLYx4lApM9rSq</code></p>
+<p>v0.2.0 SRI: <code>sha384-oq7DxvsV5xTZicFXvWOXkp3r6QjM56BR7RDu5BOTSernY4Qss855SQNHOghIfvCO</code><br>v0.1.0 SRI: <code>sha384-rippFYqz9WXCSA21KhV7yVGmsJBg7ysrW5XNgvehhYhLOLDCKMfaLYx4lApM9rSq</code></p>
 <h2>Use it</h2>
 <p>You bring your own Google OAuth client id. In Google Cloud, add your site's origin and the redirect page below to a Web client. Google only returns tokens to origins registered on the client, so this is how each site stays its own. This site's client serves only this site.</p>
 <pre>&lt;!-- optional: check the file against its hash (add crossorigin) --&gt;
@@ -67,7 +67,7 @@ else {
 }
 &lt;/script&gt;</pre>
 <p>A module import cannot carry an integrity attribute itself; the <code>modulepreload</code> link above makes the browser check the hash before the import uses the file.</p>
-<h2>Calls (v0.1.0)</h2>
+<h2>Calls (v0.1.0 and v0.2.0, the same)</h2>
 <table><caption class="status">All calls return promises. Errors are <code>DriveError</code> with a <code>status</code>.</caption>
 <thead><tr><th scope="col">Call</th><th scope="col">Does</th></tr></thead><tbody>
 <tr><td><code>signIn()</code>, <code>handleRedirect()</code>, <code>isSignedIn()</code>, <code>signOut()</code></td><td>Google's OAuth token flow for web apps, with a state check. Sign-out revokes the token.</td></tr>

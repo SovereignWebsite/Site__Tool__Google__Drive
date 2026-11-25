@@ -1,6 +1,6 @@
 // Tests for site/api/*/drive.mjs with a mocked Google. Run: node tools/test-api.mjs
 import assert from 'node:assert/strict';
-import { createDrive, SCOPES } from '../site/api/v0.1.0/drive.mjs';
+const { createDrive, SCOPES } = await import('../site/api/v' + (process.argv[2] || '0.1.0') + '/drive.mjs');
 const calls = [];
 const mk = (extra = {}) => {
   const ss = new Map(); let loc = { origin: 'https://x.example', pathname: '/cb/', search: '', hash: '', assign(u) { loc.went = u; } };
@@ -35,4 +35,4 @@ await d.trash('f1'); assert.equal(calls.at(-1).init.method, 'PATCH'); assert.dee
 await assert.rejects(() => d.get('bad'), (e) => e.status === 403 && e.message === 'nope');
 await d.signOut(); assert.equal(await d.isSignedIn(), false); assert.match(calls.at(-1).url, /oauth2\.googleapis\.com\/revoke/);
 assert.throws(() => createDrive({ env: mk().d && { location: {}, sessionStorage: {}, crypto: globalThis.crypto } }).signIn(), /clientId/);
-console.log('api tests passed');
+console.log('drive v' + (process.argv[2] || '0.1.0') + ' tests passed');

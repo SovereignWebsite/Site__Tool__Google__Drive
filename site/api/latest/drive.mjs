@@ -1,9 +1,9 @@
-// Sovereign Website Drive API, v0.1.0. One ES module, no dependencies, no telemetry.
+// Sovereign Website Drive API, v0.2.0. One ES module, no dependencies, no telemetry.
 // Pinned: this file never changes once released. Import it from https://drive.google.tool.sovereignweb.site/api/v0.1.0/drive.mjs
 // The importing site brings its own Google OAuth client id and registers its own origin and redirect URI in Google Cloud.
-// Sign-in is Google's OAuth 2.0 token flow for web apps (a redirect, response_type=token). No Google script is loaded.
+// Built on the shared Google base (api-src/base.mjs). Sign-in is Google's OAuth 2.0 token flow for web apps (a redirect, response_type=token). No Google script is loaded.
 // The token is kept only for its hour, encrypted with a non-extractable key held in IndexedDB (memory if IndexedDB fails).
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 export const SCOPES = {
   file: 'https://www.googleapis.com/auth/drive.file',            // files this site creates or the person picks. No restricted review.
   readonly: 'https://www.googleapis.com/auth/drive.readonly',    // RESTRICTED: read the whole Drive
@@ -19,11 +19,15 @@ export const EXPORTS = { // default export type for Google's own formats
   'application/vnd.google-apps.presentation': 'application/pdf',
   'application/vnd.google-apps.drawing': 'image/png'
 };
+const quote = (s) => "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
 const FIELDS = 'id,name,mimeType,size,modifiedTime,parents,webViewLink,trashed';
 
+// Shared base for the Sovereign Website Google tools (Drive, Chat). Inlined into each published module by tools/api-build.mjs,
+// so every module stays one file with one SRI hash. Sign-in is Google's OAuth 2.0 token flow for web apps (a redirect, response_type=token).
+// No Google script is loaded. The token is kept only for its hour, encrypted with a non-extractable key in IndexedDB (memory if that fails).
+class GoogleError extends Error { constructor(m, status) { super(m); this.name = 'GoogleError'; this.status = status; } }
 const b64 = (u8) => btoa(String.fromCharCode(...u8));
 const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-const quote = (s) => "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
 
 function idbOpen(idb) { return new Promise((ok, no) => { const r = idb.open('sw-drive', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }); }
 const idbGet = (db, k) => new Promise((ok, no) => { const r = db.transaction('kv').objectStore('kv').get(k); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
@@ -56,53 +60,61 @@ function vault(env) {
   };
 }
 
-// createDrive({ clientId, redirectUri, scope, env })
-//  clientId     your own Web OAuth client id (public value). Required for sign-in.
-//  redirectUri  the page that calls handleRedirect(), registered on your client. Default: the current page without its hash.
-//  scope        a string or an array: SCOPES.file (default), SCOPES.readonly or SCOPES.full.
-//  env          for tests: { fetch, indexedDB, crypto, location, history, sessionStorage }. Defaults to the browser's.
-export function createDrive(opts = {}) {
+
+// createGoogle({ clientId, redirectUri, scope, env, name, errorClass })
+function createGoogle(opts = {}) {
   const env = { fetch: (...a) => globalThis.fetch(...a), indexedDB: globalThis.indexedDB, crypto: globalThis.crypto, location: globalThis.location, history: globalThis.history, sessionStorage: globalThis.sessionStorage, ...(opts.env || {}) };
-  const scope = [].concat(opts.scope || SCOPES.file).join(' ');
+  const Err = opts.errorClass || GoogleError;
+  const scope = [].concat(opts.scope).join(' ');
   const tv = vault(env);
-  const need = async () => { const t = await tv.get(); if (!t) throw new DriveError('Not signed in, or the sign-in has ended.', 401); return t; };
-
-  async function call(url, init = {}) {
-    const t = await need();
-    const r = await env.fetch(url, { ...init, headers: { Authorization: 'Bearer ' + t, ...(init.headers || {}) } });
-    if (r.ok) return r;
-    let m = String(r.status); try { m = (await r.json()).error.message || m; } catch {}
-    if (r.status === 401) await tv.clear();
-    throw new DriveError(m, r.status);
-  }
-  const json = async (url, init) => (await call(url, init)).json();
-
-  const api = {
-    version: VERSION, scope,
-    // ----- sign-in -----
-    // Starts the redirect to Google. Call it from a button press. A state value guards against forged returns.
+  const need = async () => { const t = await tv.get(); if (!t) throw new Err('Not signed in, or the sign-in has ended.', 401); return t; };
+  const g = {
+    scope,
     signIn() {
-      if (!opts.clientId) throw new DriveError('No clientId: pass your own Google OAuth client id.', 0);
+      if (!opts.clientId) throw new Err('No clientId: pass your own Google OAuth client id.', 0);
       const state = b64(env.crypto.getRandomValues(new Uint8Array(16))).replace(/[^A-Za-z0-9]/g, '');
-      env.sessionStorage.setItem('sw-drive-state', state);
+      env.sessionStorage.setItem('sw-google-state', state);
       const redirect = opts.redirectUri || env.location.origin + env.location.pathname;
       const q = new URLSearchParams({ client_id: opts.clientId, redirect_uri: redirect, response_type: 'token', scope, state, include_granted_scopes: 'true' });
-      env.location.assign(AUTH + '?' + q);
+      env.location.assign('https://accounts.google.com/o/oauth2/v2/auth?' + q);
     },
-    // On the redirect page: reads the token from the URL fragment, checks state, stores it sealed, and removes the fragment.
     async handleRedirect() {
       const h = new URLSearchParams((env.location.hash || '').replace(/^#/, ''));
       if (!h.has('access_token') && !h.has('error')) return { signedIn: !!(await tv.get()), fresh: false };
-      const want = env.sessionStorage.getItem('sw-drive-state'); env.sessionStorage.removeItem('sw-drive-state');
+      const want = env.sessionStorage.getItem('sw-google-state'); env.sessionStorage.removeItem('sw-google-state');
       env.history.replaceState(null, '', env.location.pathname + env.location.search);
-      if (h.has('error')) throw new DriveError('Google said: ' + h.get('error'), 0);
-      if (!want || h.get('state') !== want) throw new DriveError('The sign-in did not match the request that started it. Try again.', 0);
+      if (h.has('error')) throw new Err('Google said: ' + h.get('error'), 0);
+      if (!want || h.get('state') !== want) throw new Err('The sign-in did not match the request that started it. Try again.', 0);
       await tv.put(h.get('access_token'), h.get('expires_in'));
       return { signedIn: true, fresh: true };
     },
     isSignedIn: async () => !!(await tv.get()),
-    token: () => tv.get(), // for Google's own widgets, such as the Picker. Do not store it.
+    token: () => tv.get(), // for Google's own widgets. Do not store it.
     async signOut() { const t = await tv.get(); await tv.clear(); if (t) { try { await env.fetch('https://oauth2.googleapis.com/revoke?token=' + encodeURIComponent(t), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }); } catch {} } },
+    // call(url, init): an authorised fetch. Throws an error with .status and Google's own message.
+    async call(url, init = {}) {
+      const t = await need();
+      const r = await env.fetch(url, { ...init, headers: { Authorization: 'Bearer ' + t, ...(init.headers || {}) } });
+      if (r.ok) return r;
+      let m = String(r.status); try { m = (await r.json()).error.message || m; } catch {}
+      if (r.status === 401) await tv.clear();
+      throw new Err(m, r.status);
+    },
+    json: async (url, init) => (await g.call(url, init)).json(),
+    env
+  };
+  return g;
+}
+
+
+export function createDrive(opts = {}) {
+  const g = createGoogle({ ...opts, scope: opts.scope || SCOPES.file, errorClass: DriveError });
+  const env = g.env, json = g.json, call = g.call;
+
+  const api = {
+    version: VERSION, scope: g.scope,
+    // ----- sign-in (from the shared base) -----
+    signIn: g.signIn, handleRedirect: g.handleRedirect, isSignedIn: g.isSignedIn, token: g.token, signOut: g.signOut,
 
     // ----- read -----
     // list({ parent, q, pageToken, pageSize }) -> { files, nextPageToken }. q is a Drive query; parent adds "'id' in parents".
@@ -150,5 +162,5 @@ export function createDrive(opts = {}) {
   };
   return api;
 }
-export class DriveError extends Error { constructor(m, status) { super(m); this.name = 'DriveError'; this.status = status; } }
+export class DriveError extends GoogleError { constructor(m, status) { super(m); this.name = 'DriveError'; this.status = status; } }
 export default createDrive;
