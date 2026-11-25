@@ -34,3 +34,12 @@ A page he keeps open, signed in to Google in his browser, drains the agents' sea
 
 ## Set-up (for Dinis's partner)
 See /app/setup/ on this site: the Chat section lists enabling the Chat API, the optional Chat configuration page, the scopes, and the origin and redirect to add on the same Internal client.
+
+## Relay core (built against a test lane, 25 Nov)
+`chat-staging/relay/relay-core.mjs`, tested by `tools/test-relay.mjs`. Lane reading and opening are plug-in functions (`read()`, `open(entry)`), so the real sealed lane drops in when its envelope is final (lane.entry/2 waits on Dinis's yes). Inputs still needed from a.maestro: the lane card (endpoint, vault_id, append_token, recipient key) and which browser key the relay page uses.
+- **Allow-list:** only an item's `id`, `title` and `link` are ever read. The post is `Needs you: <title> <link>`; the body and every other field are never copied.
+- **Refused for good** (not retried, never posted): a link that is not https or carries credentials, a title over 140 characters, anything shaped like a key or token, an email address or a phone number, and optionally a link host outside an allow-list.
+- **Dedup:** one post per item id, remembered by hash, marked only after a successful post, so a failed post is retried and never lost.
+- **Rate limit:** five posts a minute by default; the rest wait for the next tick. A failed post stops the tick.
+- **Pause:** a pause control stops it at once.
+- Still to build: the page (a "posting as" line, the pause button, the log of what was posted), the browser key store, and the real lane opener.

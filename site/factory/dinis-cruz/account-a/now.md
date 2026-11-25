@@ -5,4 +5,5 @@
 - Chat (second tool, from a.maestro, Dinis: "great lets do this"): chat.mjs v0.1.0 built in chat-staging/ (list spaces, read, post, reply), tested against a mock. Plan and threat model: docs/chat-plan.md. The Chat repository did not exist yet, so nothing is published for Chat.
 - Setup guide at /app/setup/ now has a Chat section for Dinis's partner.
 - Nothing has run against real Google. policy/abp.json untouched.
+- Relay core built against a test lane (chat-staging/relay/relay-core.mjs, tools/test-relay.mjs): allow-list of id, title, link; refuses secrets, contacts and non-https links; dedup; rate limit; pause. The real lane opener waits for the lane card and Dinis's key choice.
 - Next: move chat-staging/ to the Chat repository when it exists, build its app, then the relay after security.b's review and the lane cards.
