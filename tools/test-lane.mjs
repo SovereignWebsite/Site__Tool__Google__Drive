@@ -1,5 +1,5 @@
 // lane.entry/2 reader against the owners' vectors. Fetch the vectors first (they hold throwaway keys, so they are not kept in this repository):
-//   curl -sSo /tmp/entry-v2-vectors.json https://raw.githubusercontent.com/VoiceDebrief/VoiceDebrief__App__iOS/520cd834828c7447f1483e83e05ffc3b93afd0d1/website/lanes/entry-v2/vectors.json
+//   curl -sSo /tmp/entry-v2-vectors.json https://raw.githubusercontent.com/VoiceDebrief/VoiceDebrief__App__iOS/dc559079baf332c99e5451ac8f6677f9d3ef2048/website/lanes/entry-v2/vectors.json
 //   node tools/test-lane.mjs /tmp/entry-v2-vectors.json
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

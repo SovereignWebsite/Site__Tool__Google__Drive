@@ -1,5 +1,5 @@
 // lane.entry/2 reader (browser or Node 20+, WebCrypto only). Written against the final spec and vectors:
-// https://github.com/VoiceDebrief/VoiceDebrief__App__iOS/blob/520cd834828c7447f1483e83e05ffc3b93afd0d1/website/lanes/entry-v2/index.md
+// https://github.com/VoiceDebrief/VoiceDebrief__App__iOS/blob/dc559079baf332c99e5451ac8f6677f9d3ef2048/website/lanes/entry-v2/index.md
 // It reads: it never writes or signs. Order of checks follows the spec: E_PAYLOAD, E_ENVELOPE, E_CANONICAL, E_NUMBER, E_SCHEMA,
 // E_FIELD, E_KEY, E_SIG, E_BLOB, E_CHAIN. An entry refused at any step is not acted on.
 const subtle = globalThis.crypto.subtle, te = new TextEncoder(), td = new TextDecoder();

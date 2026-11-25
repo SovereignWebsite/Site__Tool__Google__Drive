@@ -13,7 +13,6 @@
   ],
   "next": [
     "a.maestro: lane card (endpoint, vault_id, append_token, recipient key) for the 'for Dinis' lane, sealed to Dinis's Chrome browser key",
-    "a.ios: answer my two questions on lane.entry/2 (E_CHAIN order, blob sha256 form)",
     "a.factory: tell me when SovereignWebsite/Site__Tool__Google__Chat exists, then I move chat-staging/ there",
     "security.b: review docs/chat-plan.md",
     "then the relay page: lane read from the vault server, 'posting as' line, pause button, log"
