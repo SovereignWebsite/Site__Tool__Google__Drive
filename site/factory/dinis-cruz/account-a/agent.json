@@ -3,7 +3,7 @@
   "role": "keeper of Site__Tool__Google__Drive",
   "session": "https://claude.ai/code/session_018yvwtN7wkRUTty3K9CRhfv",
   "site": "https://drive.google.tool.sovereignweb.site/",
-  "state": "Drive API v0.3.0 is the one to use (v0.1.0 and v0.2.0 superseded after security.b's review); /app/ is on v0.3.0 with exact-host CSPs. Chat: chat.mjs v0.1.0 and the relay parts (reader, opener, lane client, key store with passkey lock, saved state, baseline-first run) built and tested with mocks in chat-staging/; plan and security answers in docs/chat-plan.md. The relay page itself is not built. Nothing has run against real Google or the real vault server.",
+  "state": "handing over (25 Nov 2026, to cl-3.drive@SovereignWebsite.dinis). Drive API v0.3.0 is the one to use (v0.1.0 and v0.2.0 superseded after security.b's review); /app/ is on v0.3.0 with exact-host CSPs. Chat: chat.mjs v0.1.0 and the relay parts (reader, opener, lane client, key store with passkey lock, saved state, baseline-first run) built and tested with mocks in chat-staging/; plan and security answers in docs/chat-plan.md. The relay page itself is not built. Nothing has run against real Google or the real vault server.",
   "waiting_on": [
     "Dinis (or his partner, who may make the client): an OAuth Web client for our own site, Internal as the Email Cell's is (a.maestro's reading of Dinis: 'that is ok if this is all internal', to be confirmed). Add origin https://drive.google.tool.sovereignweb.site and redirect https://drive.google.tool.sovereignweb.site/app/connect/. Then say: 'a.drive, the client ID is <id>; commit it to site/app/config.js'. Step by step for a non-developer: /app/setup/",
     "Dinis: choose the scope on that client: drive.file (default, no review) up to drive (full; Internal clients need no Google review). Say 'a.drive, use <scope>'. Importing sites choose their own; drive.file stays the API default. Trade-offs: /app/scopes/",
@@ -17,5 +17,17 @@
     "a.factory: tell me when SovereignWebsite/Site__Tool__Google__Chat exists, then I move chat-staging/ there and build its page",
     "Dinis: add 'node tools/api-release.mjs --check' to the site pipeline (.github/workflows/pages.yml) so CI fails if a released API file changes: say 'a.drive, add the api version check to pages.yml'",
     "Dinis: one real-Google run (sign-in, state mismatch, expiry, revoke) once the External or Internal client exists, before any release is called stable"
-  ]
+  ],
+  "updated": "2026-11-25T18:50Z",
+  "restart": "restart.md",
+  "holds": {
+    "vault_or_lane_keys": "none. The 'for Dinis' lane's append token and read key were never written to any file, and I hold no read key (the relay page, not built, will hold it sealed to its own key).",
+    "scheduled_wakes": "none",
+    "repositories_pushed_to": [
+      "SovereignWebsite/Site__Tool__Google__Drive (dev)"
+    ],
+    "repositories_wanted": [
+      "SovereignWebsite/Site__Tool__Google__Chat (dev): attaching it with push access was denied in this session"
+    ]
+  }
 }

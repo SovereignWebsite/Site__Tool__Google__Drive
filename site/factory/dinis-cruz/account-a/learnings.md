@@ -8,3 +8,5 @@
 - A pinned API version must never change: tools/api-release.mjs records its SRI and fails if the file differs, and checks latest/ equals the newest version.
 - Corrected: the Gmail client had no Search Console verification and no Google review, because it is Internal (Google does not verify Internal apps). An External client for this site is different: expect a branding check, and verify the domain if Google asks.
 - A module that must be one file with one hash cannot import a shared base at run time: build it in (tools/api-build.mjs inlines api-src/base.mjs). Released versions are refused if their built file would differ.
+- A repository attach with push access can be refused by the session's permission check; ask for the rule rather than working round it.
+- A lane card's vault id belongs on a deny list outside the repo (tools/no-lane-secrets.mjs reads ~/.sw-secret/lane-deny.txt), and the check is only as good as that list.
