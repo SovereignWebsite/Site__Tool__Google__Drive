@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createRelayKeys, memoryStore, signerFromSpki, LABEL } from '../chat-staging/relay/relay-keys.mjs';
-import { RSA_GEN, EC, seal } from '../chat-staging/relay/vendor/pki/v0.2.28/keys.js';
-import { codeOf } from '../chat-staging/relay/vendor/pki/v0.2.28/message.js';
+import { RSA_GEN, EC, seal, bundleOf, unpem } from '../chat-staging/relay/vendor/pki/v0.2.28/keys.js';
+import { codeOf, compose, sealMessage, qrSealed, parseQrText } from '../chat-staging/relay/vendor/pki/v0.2.28/message.js';
 const s = crypto.subtle, gen = { ...RSA_GEN, modulusLength: 2048 }; // 2048 only to keep the test quick; the page uses RSA_GEN (4096)
 const store = memoryStore(), rk = createRelayKeys({ store, label: LABEL('chat.google.tool.sovereignweb.site'), gen });
 assert.equal(await rk.existing(), null);
@@ -28,7 +28,7 @@ const fails = [
   [await mk(JSON.stringify({ ...secret, kind: 'other' })), /not a read-key/],
   [await mk(JSON.stringify({ ...secret, lane: 'elsewhere' })), /another lane/],
   [await mk('not json'), /not a read-key/],
-  ['m1.garbage', /not a sealed m1/],
+  ['m1.garbage', /not a sealed/],
 ];
 for (const [code, why] of fails) await assert.rejects(() => rk.openReadKey(id, code, [signer], { lane: 'for-dinis' }), why);
 // signed with a different key than the trusted one, but claiming the trusted fingerprint: the signature does not check
@@ -39,4 +39,18 @@ await assert.rejects(() => rk.openReadKey(id, forged, [signer]), /signature does
 const rk2 = createRelayKeys({ store: memoryStore(), label: 'x', gen }); const id2 = await rk2.identity();
 const toOther = await mk(JSON.stringify(secret), { to: id2.bundle });
 await assert.rejects(() => rk.openReadKey(id, toOther, [signer]), /another key/);
+// a.maestro's way: compose + sealMessage (inner and envelope both signed), wrapped as pki.sgit.ai/qr/sealed/v1
+const sbundle = await bundleOf(unpem(id.bundle.encrypt).der, spki, 'test signer'); assert.equal(sbundle.signing_fingerprint, signer.signing_fingerprint, 'same fingerprint rule');
+const from = { bundle: sbundle, private: { sign: pk8 } };
+const viaMessage = async (text, { f = from, to = id.bundle, at } = {}) => { const m = await compose({ to, from: f, text, ...(at ? { at } : {}) }); const { code } = await sealMessage(m, to, f); return qrSealed({ to: to.signing_fingerprint, from: f.bundle.signing_fingerprint, code }); };
+const rk3 = createRelayKeys({ store: memoryStore(), label: 'x', gen }); const id3 = await rk3.identity();
+assert.deepEqual(await rk3.openReadKey(id3, await viaMessage(JSON.stringify(secret), { to: id3.bundle }), [signer], { lane: 'for-dinis' }), { lane: 'for-dinis', vault_id: 'testvault1' });
+assert.equal((await rk3.readKey('for-dinis')).enum_key, 'aa'.repeat(32));
+const info3 = await rk3.publicInfo(); assert.equal(parseQrText(info3.qrText).kind, 'key'); assert.equal(parseQrText(info3.qrText).code, info3.k1);
+const notJson = await viaMessage('not json', { to: id3.bundle });
+await assert.rejects(() => rk3.openReadKey(id3, notJson, [signer]), /not a read-key/);
+const imp = { bundle: { ...sbundle }, private: { sign: new Uint8Array(await s.exportKey('pkcs8', other.privateKey)) } }; // inner signature by another key, same claimed fingerprint
+const innerBad = await (async () => { const m = await compose({ to: id3.bundle, from: imp, text: JSON.stringify(secret) }); const { code } = await sealMessage(m, id3.bundle, from); return qrSealed({ to: id3.bundle.signing_fingerprint, from: sbundle.signing_fingerprint, code }); })();
+await assert.rejects(() => rk3.openReadKey(id3, innerBad, [signer]), /own signature does not check/);
+await assert.rejects(() => rk3.openReadKey(id3, '{"v":1,"kind":"pki.sgit.ai/qr/sealed/v1","code":"x","extra":1}', [signer]), /not a sealed code/);
 console.log('relay keys tests passed');

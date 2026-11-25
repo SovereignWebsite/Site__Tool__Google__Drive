@@ -4,7 +4,7 @@
 //   RSA-OAEP 4096 (opens things sealed to the page) and ECDSA P-256 (signs), both private halves NOT extractable, kept in IndexedDB.
 // The private halves never leave the browser. The read key is kept only sealed to the page's own public key.
 import { bundleOf, seal, parseEnvelope, unb64, verifyBytes, RSA_GEN, EC, fingerprint } from './vendor/pki/v0.2.28/keys.js';
-import { keyCode, parseCode } from './vendor/pki/v0.2.28/message.js';
+import { keyCode, parseCode, parseQrText, verifyMessage, problems, qrKey, KIND } from './vendor/pki/v0.2.28/message.js';
 
 export const LABEL = (host) => 'Chat relay, ' + host;
 const IDENTITY = 'page-identity', SECRET = 'secret:';
@@ -45,17 +45,25 @@ export function createRelayKeys({ store, label, gen = RSA_GEN, subtle = globalTh
   return {
     existing, identity, unsealWith, ...kept,
     // What Dinis sends to a.maestro: the k1 string, and both fingerprints written "sha256:xxxx" (first 16 hex of each SPKI hash).
-    async publicInfo() { const id = await identity(); return { k1: keyCode(id.bundle).code, label: id.bundle.label, encFp: id.bundle.fingerprint, signFp: id.bundle.signing_fingerprint }; },
-    // openReadKey(id, sealedText, signers): an m1 code sealed to this page and SIGNED by a trusted signer ({ sign: PEM, signing_fingerprint }).
-    // The plaintext must be {"kind":"lane-read-key","lane","vault_id","enum_key"}. Returns { lane, vault_id, enum_key }; keeps it sealed under "read-key:<lane>".
+    async publicInfo() { const id = await identity(); const k1 = keyCode(id.bundle).code; return { k1, qrText: qrKey({ fp: id.bundle.signing_fingerprint, label: id.bundle.label, code: k1 }), label: id.bundle.label, encFp: id.bundle.fingerprint, signFp: id.bundle.signing_fingerprint }; },
+    // openReadKey(id, sealedText, signers): a signed m1 code sealed to this page, as bare m1 text, a pki.sgit.ai link, or the strict QR JSON
+    // (pki.sgit.ai/qr/sealed/v1). The signer must be one of `signers` ({ sign: PEM, signing_fingerprint }); the envelope signature must check.
+    // The plaintext is either a pki message (pki.sgit.ai/message/v1, whose own signature must also check and whose text is the JSON) or the JSON itself:
+    //   {"kind":"lane-read-key","lane","vault_id","enum_key"}. Returns { lane, vault_id }; the read key is kept only sealed under "read-key:<lane>".
     async openReadKey(id, sealedText, signers, { lane } = {}) {
-      const c = parseCode(sealedText); if (!c) throw new Error('that is not a sealed m1 code');
+      let c; try { const q = parseQrText(sealedText); c = q.kind === 'sealed' ? parseCode(q.code) : null; } catch (e) { throw new Error('that is not a sealed code: ' + e.message); }
+      if (!c) throw new Error('that is not a sealed m1 code');
       if (c.to !== id.bundle.signing_fingerprint && c.to !== id.bundle.fingerprint) throw new Error("sealed to another key, not this page's");
       const signer = signers.find((s) => s.signing_fingerprint === c.signer);
       if (!c.signer || !signer) throw new Error('not signed by a signer this page trusts');
       const opened = await unsealWith(id.encrypt, c.enc, [signer]);
-      if (opened.verified !== true) throw new Error("the signature does not check");
+      if (opened.verified !== true) throw new Error('the signature does not check');
       let g; try { g = JSON.parse(opened.text); } catch { throw new Error('not a read-key message'); }
+      if (g && g.kind === KIND) {
+        const p = problems(g, [id.bundle.signing_fingerprint]); if (p.length) throw new Error(p.join('; '));
+        if (g.from !== signer.signing_fingerprint || (await verifyMessage(g, signer)) !== true) throw new Error("the message's own signature does not check");
+        try { g = JSON.parse(g.text); } catch { throw new Error('not a read-key message'); }
+      }
       if (!g || g.kind !== 'lane-read-key' || typeof g.lane !== 'string' || typeof g.vault_id !== 'string' || typeof g.enum_key !== 'string' || !g.enum_key) throw new Error('not a read-key message');
       if (lane && g.lane !== lane) throw new Error('that read key is for another lane');
       await kept.keep(id, 'read-key:' + g.lane, JSON.stringify({ vault_id: g.vault_id, enum_key: g.enum_key }));
