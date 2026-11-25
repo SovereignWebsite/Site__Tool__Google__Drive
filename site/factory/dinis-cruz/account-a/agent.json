@@ -12,8 +12,9 @@
     "Dinis (or his partner): for Chat, on the same Internal client enable the Google Chat API, add the Chat scopes, and add origin https://chat.google.tool.sovereignweb.site and redirect https://chat.google.tool.sovereignweb.site/app/connect/. Steps: /app/setup/ (Chat section)."
   ],
   "next": [
-    "a.factory: tell me when SovereignWebsite/Site__Tool__Google__Chat exists, then I move chat-staging/ there and build its /app/",
-    "security.b: review docs/chat-plan.md (via a.maestro) before the relay is built",
-    "a.maestro: the lane cards for the relay"
+    "a.ios: publish lane.entry/2 spec and test vectors (Dinis said yes 25 Nov); then I code the real lane opener",
+    "a.maestro: lane card (endpoint, vault_id, append_token, recipient key) for the 'for Dinis' lane, sealed to Dinis's Chrome browser key (fingerprint via crm.dev.a)",
+    "a.factory: tell me when SovereignWebsite/Site__Tool__Google__Chat exists, then I move chat-staging/ there",
+    "security.b: review docs/chat-plan.md"
   ]
 }
