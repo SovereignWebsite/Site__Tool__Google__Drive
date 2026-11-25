@@ -11,6 +11,7 @@ wf=.github/workflows/pages.yml
 grep -q "SWS_GATE: '1'" "$wf" && export SWS_GATE=1
 grep -q "SWS_OWN_SITE: '1'" "$wf" && export SWS_OWN_SITE=1
 step() { printf '\n== %s\n' "$1"; }
+step "lane card values"; node tools/no-lane-secrets.mjs
 step build;            node .github/ci/build.mjs
 step "link previews";  node .github/ci/share-check.mjs _site
 step quality;          node .github/ci/quality.mjs _site
