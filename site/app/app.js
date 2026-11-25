@@ -1,11 +1,11 @@
 // Drive in the browser. No server of ours: the page talks to Google directly, with the person's own token.
 // The token is kept in sessionStorage (this tab only) with its expiry, and never leaves the browser except to
 // www.googleapis.com. Output is written with textContent only, never innerHTML.
-import { createDrive, FOLDER } from '/api/v0.1.0/drive.mjs';
+import { createDrive, FOLDER } from '/api/v0.3.0/drive.mjs';
 (function () {
   'use strict';
   var cfg = window.DRIVE_CONFIG || {};
-  var drive = createDrive({ clientId: cfg.clientId, scope: cfg.scope, redirectUri: location.origin + '/app/connect/' });
+  var drive = createDrive({ clientId: cfg.clientId, scope: cfg.scope, redirectUri: location.origin + '/app/connect/', exposeToken: true }); // exposeToken: only the optional Picker needs the raw token; any script on this origin could call it, so this page loads no third-party script before sign-in
   var PICKED_KEY = 'drive.picked';
   var $ = function (id) { return document.getElementById(id); };
 

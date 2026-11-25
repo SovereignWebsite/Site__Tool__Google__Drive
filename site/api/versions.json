@@ -1,16 +1,23 @@
 {
-  "latest": "0.2.0",
+  "latest": "0.3.0",
   "latest_path": "/api/latest/drive.mjs",
   "versions": [
     {
+      "version": "0.3.0",
+      "path": "/api/v0.3.0/drive.mjs",
+      "sri": "sha384-FUM1AzFRHB3ozymPHEnxawG9OVXXd+Q5mq4E8IsNAxNflfdQ09P0EkYxpO3GXYc8"
+    },
+    {
       "version": "0.2.0",
       "path": "/api/v0.2.0/drive.mjs",
-      "sri": "sha384-oq7DxvsV5xTZicFXvWOXkp3r6QjM56BR7RDu5BOTSernY4Qss855SQNHOghIfvCO"
+      "sri": "sha384-oq7DxvsV5xTZicFXvWOXkp3r6QjM56BR7RDu5BOTSernY4Qss855SQNHOghIfvCO",
+      "superseded": "superseded by 0.3.0 (security.b review, 25 Nov 2026): do not use for real sign-ins"
     },
     {
       "version": "0.1.0",
       "path": "/api/v0.1.0/drive.mjs",
-      "sri": "sha384-rippFYqz9WXCSA21KhV7yVGmsJBg7ysrW5XNgvehhYhLOLDCKMfaLYx4lApM9rSq"
+      "sri": "sha384-rippFYqz9WXCSA21KhV7yVGmsJBg7ysrW5XNgvehhYhLOLDCKMfaLYx4lApM9rSq",
+      "superseded": "superseded by 0.3.0 (security.b review, 25 Nov 2026): do not use for real sign-ins"
     }
   ]
 }

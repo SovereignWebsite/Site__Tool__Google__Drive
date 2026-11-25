@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com; img-src 'self' blob: data: https:; connect-src https://*.googleapis.com; frame-src https://*.google.com https://content.googleapis.com blob:; font-src https://fonts.gstatic.com https://www.gstatic.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; frame-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <title>Drive API: Sovereign Website Drive, a variation of Google Drive</title>
 <meta name="description" content="An importable ES module for Google Drive in the browser: sign-in, list, search, read, upload, export. Versioned and pinned, with hashes.">
 <meta property="og:type" content="website">
@@ -42,18 +43,18 @@
 <p>One ES module with no dependencies, served from this site. Any website can import it to sign people in with Google and use their Drive, from their own browser. There is no server of ours in the path and no telemetry. The <a href="/app/browse/">Drive browser</a> is built on it.</p>
 <h2>Versions</h2>
 <ul>
-<li><strong>Pinned:</strong> <code>https://drive.google.tool.sovereignweb.site/api/v0.2.0/drive.mjs</code> (or v0.1.0). Never changes once released.</li>
-<li><strong>Latest:</strong> <code>https://drive.google.tool.sovereignweb.site/api/latest/drive.mjs</code>. Moves only on a release, so it can break you. Pin in production.</li>
+<li><strong>Pinned:</strong> <code>https://drive.google.tool.sovereignweb.site/api/v0.3.0/drive.mjs</code>. Never changes once released.</li>
+<li><strong>Latest:</strong> <code>https://drive.google.tool.sovereignweb.site/api/latest/drive.mjs</code>. Moves only on a release. <strong>Use it for demos only.</strong> A site with real users imports a pinned version with its hash: whoever can change what <code>latest</code> serves would otherwise get every importing site's token.</li>
 <li>Hashes for every version: <a href="/api/versions.json">/api/versions.json</a>. Changes: <a href="/api/changelog/">changelog</a>.</li>
 </ul>
-<p>v0.2.0 SRI: <code>sha384-oq7DxvsV5xTZicFXvWOXkp3r6QjM56BR7RDu5BOTSernY4Qss855SQNHOghIfvCO</code><br>v0.1.0 SRI: <code>sha384-rippFYqz9WXCSA21KhV7yVGmsJBg7ysrW5XNgvehhYhLOLDCKMfaLYx4lApM9rSq</code></p>
+<p>v0.3.0 SRI: <code>sha384-FUM1AzFRHB3ozymPHEnxawG9OVXXd+Q5mq4E8IsNAxNflfdQ09P0EkYxpO3GXYc8</code><br>Superseded, do not use for real sign-ins: v0.2.0 (<code>sha384-oq7DxvsV5xTZicFXvWOXkp3r6QjM56BR7RDu5BOTSernY4Qss855SQNHOghIfvCO</code>) and v0.1.0 (<code>sha384-rippFYqz9WXCSA21KhV7yVGmsJBg7ysrW5XNgvehhYhLOLDCKMfaLYx4lApM9rSq</code>).</p>
 <h2>Use it</h2>
 <p>You bring your own Google OAuth client id. In Google Cloud, add your site's origin and the redirect page below to a Web client. Google only returns tokens to origins registered on the client, so this is how each site stays its own. This site's client serves only this site.</p>
 <pre>&lt;!-- optional: check the file against its hash (add crossorigin) --&gt;
-&lt;link rel="modulepreload" crossorigin href="https://drive.google.tool.sovereignweb.site/api/v0.1.0/drive.mjs"
-      integrity="sha384-rippFYqz9WXCSA21KhV7yVGmsJBg7ysrW5XNgvehhYhLOLDCKMfaLYx4lApM9rSq"&gt;
+&lt;link rel="modulepreload" crossorigin href="https://drive.google.tool.sovereignweb.site/api/v0.3.0/drive.mjs"
+      integrity="sha384-FUM1AzFRHB3ozymPHEnxawG9OVXXd+Q5mq4E8IsNAxNflfdQ09P0EkYxpO3GXYc8"&gt;
 &lt;script type="module"&gt;
-import { createDrive, SCOPES } from 'https://drive.google.tool.sovereignweb.site/api/v0.1.0/drive.mjs';
+import { createDrive, SCOPES } from 'https://drive.google.tool.sovereignweb.site/api/v0.3.0/drive.mjs';
 const drive = createDrive({ clientId: 'YOUR_CLIENT_ID.apps.googleusercontent.com', scope: SCOPES.file,
                             redirectUri: location.origin + '/connect/' });
 await drive.handleRedirect();   // on the redirect page: stores the token, strips it from the URL
@@ -67,7 +68,7 @@ else {
 }
 &lt;/script&gt;</pre>
 <p>A module import cannot carry an integrity attribute itself; the <code>modulepreload</code> link above makes the browser check the hash before the import uses the file.</p>
-<h2>Calls (v0.1.0 and v0.2.0, the same)</h2>
+<h2>Calls (the same in every version)</h2>
 <table><caption class="status">All calls return promises. Errors are <code>DriveError</code> with a <code>status</code>.</caption>
 <thead><tr><th scope="col">Call</th><th scope="col">Does</th></tr></thead><tbody>
 <tr><td><code>signIn()</code>, <code>handleRedirect()</code>, <code>isSignedIn()</code>, <code>signOut()</code></td><td>Google's OAuth token flow for web apps, with a state check. Sign-out revokes the token.</td></tr>
@@ -78,6 +79,17 @@ else {
 <p>Coming, as new versions: Sheets as a database (create a sheet, read and append rows as JSON with a header row as the schema), resumable upload, and backup and export helpers.</p>
 <h2>Scopes</h2>
 <p><code>SCOPES.file</code> (drive.file) is the default and needs no restricted review, but sees only files your site creates or the person picks. <code>SCOPES.readonly</code> and <code>SCOPES.full</code> see the whole Drive and are restricted: Google's verification applies to a public client. The API supports all three and your site chooses. The cost and the recommendation are on <a href="/app/scopes/">the scopes page</a>.</p>
+<h2>Using it safely</h2>
+<ul>
+<li><strong>What the sealed token protects.</strong> The token is kept encrypted with a key the browser will not export, so it cannot be read from disk. It does <strong>not</strong> protect against script running on your own origin: any script there can use the stored key or ask for the token. Your page's Content-Security-Policy and the absence of cross-site scripting and third-party script are the real control.</li>
+<li><strong><code>token()</code> is off.</strong> It throws unless you pass <code>exposeToken: true</code>, which only Google's own widgets (the Picker) need.</li>
+<li><strong>No wider token.</strong> The request never asks Google to add scopes you granted before, and a token that comes back with more access than you asked for is refused.</li>
+<li><strong>Pin and check.</strong> Import a pinned version with its hash. Use <code>latest</code> for demos only.</li>
+<li><strong>The sign-in return page.</strong> Load nothing from another site before <code>handleRedirect()</code> runs, and send <code>Referrer-Policy: no-referrer</code> (a <code>&lt;meta name="referrer" content="no-referrer"&gt;</code> works). The token comes back in the URL fragment, which Google's token flow for browsers uses; Google documents it, but the OAuth security guidance prefers a code flow, which we will move to when Google allows it without a secret in the browser.</li>
+<li><strong>Set exact hosts in your CSP.</strong> <code>connect-src https://www.googleapis.com https://oauth2.googleapis.com</code>, not <code>*.googleapis.com</code> or <code>https:</code>.</li>
+<li><strong>Downloaded files can be anything a stranger shared.</strong> Never render downloaded HTML or SVG on your own origin: offer a download, or show it in a sandboxed frame. Open <code>webViewLink</code> with <code>rel="noopener noreferrer"</code>.</li>
+<li><strong>Not yet proven against real Google.</strong> Every version so far is tested against a mocked Google only. Treat the API as experimental until a release says otherwise.</li>
+</ul>
 <h2>How the token is kept</h2>
 <p>For its hour only, encrypted with a non-extractable key held in the browser's IndexedDB (memory if that is unavailable). It is sent only to Google's API hosts. Set your own page's <code>connect-src</code> to Google's API hosts and nothing else.</p>
 <p>There is deliberately no broker mode (a pop-up on this site handing a token to another origin): any site could then ask for someone's Drive.</p>

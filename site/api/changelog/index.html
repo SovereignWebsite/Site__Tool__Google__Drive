@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com; img-src 'self' blob: data: https:; connect-src https://*.googleapis.com; frame-src https://*.google.com https://content.googleapis.com blob:; font-src https://fonts.gstatic.com https://www.gstatic.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; frame-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <title>Changelog: Sovereign Website Drive, a variation of Google Drive</title>
 <meta name="description" content="What changed in each version of the Drive API.">
 <meta property="og:type" content="website">
@@ -40,11 +41,19 @@
 <main id="main">
 <h1>Changelog</h1>
 <p>Pinned versions never change. <code>/api/latest/</code> moves only when a release is added here.</p>
-<h2>v0.2.0, 25 November 2026</h2>
+<h2>v0.3.0, 25 November 2026 (use this one)</h2>
+<p>Security fixes after security.b's review. v0.1.0 and v0.2.0 are superseded and should not be used for real sign-ins; they stay in place unchanged, because a released file never changes.</p>
+<ul><li><code>token()</code> is off unless you pass <code>exposeToken: true</code>.</li>
+<li>No <code>include_granted_scopes</code>, and a returned token wider than asked for is refused.</li>
+<li>The token store and sign-in state are namespaced per module, so Drive and Chat on one origin never share a token.</li>
+<li>Revoke sends the token in the request body, not the address.</li>
+<li>Upload refuses a type with a line break or one that is not <code>type/subtype</code>.</li>
+<li>Docs: what the sealed token does and does not protect, pin with a hash, safe handling of downloaded files, the sign-in return page. Still tested against a mocked Google only.</li></ul>
+<h2>v0.2.0, 25 November 2026 (superseded)</h2>
 <ul><li>The same calls as v0.1.0, now built on the shared Google base that the Chat API also uses (sign-in, token sealing, errors). <code>DriveError</code> now extends <code>GoogleError</code>.</li>
 <li>Still one file with one hash: the base is inlined when the module is built.</li>
 <li>Tested against a mocked Google only.</li></ul>
-<h2>v0.1.0, 25 November 2026</h2>
+<h2>v0.1.0, 25 November 2026 (superseded)</h2>
 <ul><li>Sign-in with Google's token flow (redirect, state check), the token sealed in IndexedDB for its hour.</li>
 <li>List, search, get, download, export, upload, create folder, move, trash.</li>
 <li>Tested against a mocked Google only. Not yet run against a real client.</li></ul>

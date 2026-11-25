@@ -3,7 +3,8 @@ import { createRelayKeys, memoryStore, signerFromSpki, LABEL } from '../chat-sta
 import { RSA_GEN, EC, seal, bundleOf, unpem } from '../chat-staging/relay/vendor/pki/v0.2.28/keys.js';
 import { codeOf, compose, sealMessage, qrSealed, parseQrText } from '../chat-staging/relay/vendor/pki/v0.2.28/message.js';
 const s = crypto.subtle, gen = { ...RSA_GEN, modulusLength: 2048 }; // 2048 only to keep the test quick; the page uses RSA_GEN (4096)
-const store = memoryStore(), rk = createRelayKeys({ store, label: LABEL('chat.google.tool.sovereignweb.site'), gen });
+const fakeAuth = (avail = true) => { const log = []; return { log, available: async () => avail, create: async () => { log.push('create'); return new Uint8Array([1, 2, 3]); }, get: async () => { log.push('get'); } }; };
+const wa = fakeAuth(), store = memoryStore(), rk = createRelayKeys({ store, label: LABEL('chat.google.tool.sovereignweb.site'), gen, webauthn: wa, rpId: 'x.example' });
 assert.equal(await rk.existing(), null);
 const id = await rk.identity(); assert.equal((await rk.identity()).bundle.fingerprint, id.bundle.fingerprint, 'made once, then reused');
 assert.equal(id.encrypt.extractable, false); assert.equal(id.sign.extractable, false);
@@ -36,14 +37,14 @@ const other = await s.generateKey(EC, true, ['sign', 'verify']);
 const forged = await mk(JSON.stringify(secret), { signKey: new Uint8Array(await s.exportKey('pkcs8', other.privateKey)) });
 await assert.rejects(() => rk.openReadKey(id, forged, [signer]), /signature does not check/);
 // sealed to another page's key
-const rk2 = createRelayKeys({ store: memoryStore(), label: 'x', gen }); const id2 = await rk2.identity();
+const rk2 = createRelayKeys({ store: memoryStore(), label: 'x', gen, webauthn: fakeAuth(), rpId: 'x.example' }); const id2 = await rk2.identity();
 const toOther = await mk(JSON.stringify(secret), { to: id2.bundle });
 await assert.rejects(() => rk.openReadKey(id, toOther, [signer]), /another key/);
 // a.maestro's way: compose + sealMessage (inner and envelope both signed), wrapped as pki.sgit.ai/qr/sealed/v1
 const sbundle = await bundleOf(unpem(id.bundle.encrypt).der, spki, 'test signer'); assert.equal(sbundle.signing_fingerprint, signer.signing_fingerprint, 'same fingerprint rule');
 const from = { bundle: sbundle, private: { sign: pk8 } };
 const viaMessage = async (text, { f = from, to = id.bundle, at } = {}) => { const m = await compose({ to, from: f, text, ...(at ? { at } : {}) }); const { code } = await sealMessage(m, to, f); return qrSealed({ to: to.signing_fingerprint, from: f.bundle.signing_fingerprint, code }); };
-const rk3 = createRelayKeys({ store: memoryStore(), label: 'x', gen }); const id3 = await rk3.identity();
+const rk3 = createRelayKeys({ store: memoryStore(), label: 'x', gen, webauthn: fakeAuth(), rpId: 'x.example' }); const id3 = await rk3.identity();
 assert.deepEqual(await rk3.openReadKey(id3, await viaMessage(JSON.stringify(secret), { to: id3.bundle }), [signer], { lane: 'for-dinis' }), { lane: 'for-dinis', vault_id: 'testvault1' });
 assert.equal((await rk3.readKey('for-dinis')).enum_key, 'aa'.repeat(32));
 const info3 = await rk3.publicInfo(); assert.equal(parseQrText(info3.qrText).kind, 'key'); assert.equal(parseQrText(info3.qrText).code, info3.k1);
@@ -53,4 +54,14 @@ const imp = { bundle: { ...sbundle }, private: { sign: new Uint8Array(await s.ex
 const innerBad = await (async () => { const m = await compose({ to: id3.bundle, from: imp, text: JSON.stringify(secret) }); const { code } = await sealMessage(m, id3.bundle, from); return qrSealed({ to: id3.bundle.signing_fingerprint, from: sbundle.signing_fingerprint, code }); })();
 await assert.rejects(() => rk3.openReadKey(id3, innerBad, [signer]), /own signature does not check/);
 await assert.rejects(() => rk3.openReadKey(id3, '{"v":1,"kind":"pki.sgit.ai/qr/sealed/v1","code":"x","extra":1}', [signer]), /not a sealed code/);
+// the passkey lock: made on first use, asked once a session; no passkey on the device means no read key held
+assert.deepEqual(wa.log, ['create'], 'one passkey made, then not asked again in the same session');
+{ const w = fakeAuth(), st = memoryStore(), a = createRelayKeys({ store: st, label: 'x', gen, webauthn: w, rpId: 'x.example' }); await a.identity();
+  assert.ok((await a.publicInfo()).k1, 'the public key shows without the passkey'); assert.deepEqual(w.log, []);
+  assert.equal(await a.readKey('for-dinis'), null);
+  assert.deepEqual(w.log, ['create'], 'reading the read key made the passkey first');
+  const b = createRelayKeys({ store: st, label: 'x', gen, webauthn: w, rpId: 'x.example' }); await b.session(); assert.deepEqual(w.log, ['create', 'get'], 'a new session asks for it');
+  const none = createRelayKeys({ store: memoryStore(), label: 'x', gen, webauthn: fakeAuth(false), rpId: 'x.example' }); await none.identity();
+  await assert.rejects(() => none.readKey('for-dinis'), /no passkey/); await assert.rejects(() => none.session(), /no passkey/);
+  const alone = createRelayKeys({ store: memoryStore(), label: 'x', gen, webauthn: fakeAuth(false), rpId: 'x.example', requirePasskey: false }); await alone.identity(); assert.equal(await alone.readKey('for-dinis'), null); }
 console.log('relay keys tests passed');

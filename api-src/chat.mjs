@@ -3,6 +3,8 @@
 // Uses the Google Chat API with the signed-in person's own authorisation. There is deliberately no webhook mode:
 // a webhook address carries its secret in the URL.
 export const VERSION = '0.1.0';
+// The relay posts pointers only: it asks for nothing to read messages (security.b, 25 Nov).
+export const RELAY_SCOPES = ['https://www.googleapis.com/auth/chat.spaces.readonly', 'https://www.googleapis.com/auth/chat.messages.create'];
 export const SCOPES = { // the narrowest set for each job; check Google's current list before relying on a name
   spacesRead: 'https://www.googleapis.com/auth/chat.spaces.readonly',
   messagesRead: 'https://www.googleapis.com/auth/chat.messages.readonly',
@@ -19,7 +21,7 @@ const space = (s) => { s = String(s); if (!s.startsWith('spaces/')) s = 'spaces/
 
 // createChat({ clientId, redirectUri, scope, env })   scope defaults to read spaces + read messages + create messages.
 export function createChat(opts = {}) {
-  const g = createGoogle({ ...opts, scope: opts.scope || Object.values(SCOPES), errorClass: ChatError });
+  const g = createGoogle({ ...opts, name: 'chat', scope: opts.scope || Object.values(SCOPES), errorClass: ChatError });
   const q = (o) => { const p = new URLSearchParams(); for (const k in o) if (o[k] != null) p.set(k, String(o[k])); const s = p.toString(); return s ? '?' + s : ''; };
   const api = {
     version: VERSION, scope: g.scope,

@@ -66,3 +66,22 @@ A browser key belongs to one origin, so the relay page on the Chat site cannot u
 - `chat-staging/relay/relay-keys.mjs`, using the same vendored sgit pki code as the CRM (`vendor/`, copied unedited from the CRM's pinned copy and checked against its hashes; CC BY 4.0 and MIT, see `vendor/VENDOR.json` and `vendor/pki/ATTRIBUTION.md`). RSA-OAEP 4096 and ECDSA P-256, private halves not extractable, kept in IndexedDB; the public half is the k1 string (label "Chat relay, chat.google.tool.sovereignweb.site") with both fingerprints, and a QR of the same string at level M (the CRM found level L unreadable for this key size).
 - The read key arrives as a **signed m1 code sealed to the page's key** (the format the CRM already opens), signed by a.maestro's P-256 key. Plaintext `{"kind":"lane-read-key","lane","vault_id","enum_key"}`. The page checks the signature against the signer list and the lane name, then keeps the read key only sealed to its own public key. Tested: unsigned, unknown signer, forged signature, wrong lane, wrong kind, wrong recipient and junk are all refused.
 - Not built yet: the passkey lock (copy of the CRM's: a platform authenticator, asked once per tab), the page itself, the editable trusted-author list, the seen and chain state in IndexedDB.
+
+## security.b's review, worked in (25 Nov 2026)
+Drive and shared base (new Drive v0.3.0; v0.1.0 and v0.2.0 stay as released, marked superseded):
+1. `token()` is off unless `exposeToken: true`; the docs say plainly that the sealed token does not protect against script on the importing origin.
+2. No `include_granted_scopes`; a returned token wider than asked is refused and not stored.
+3. Docs: pinned version with hash for real sites, `latest` for demos only. `tools/api-release.mjs --check` (in `tools/check.sh`) fails if a released file changes or latest is not the newest. Adding it to the site's own pipeline (`.github/`) needs Dinis's yes.
+4. Return page: no third-party content before `handleRedirect()`, `no-referrer` on every app page. A move to a code flow with PKCE stays planned.
+5. Exact hosts in every CSP (`tools/check-csp.mjs`, in `check.sh`): no wildcards, no bare `https:`, Google script only on the Picker page, connect-src limited to Google's exact API hosts. The Picker page's CSP has not been tried against the real Picker.
+6. Upload: a type with a line break, or not `type/subtype`, is refused.
+7. Docs: do not render downloaded HTML or SVG on your origin; open webViewLink with `noopener noreferrer`.
+8. Token store and sign-in state are namespaced per module ("drive", "chat").
+9. Revoke sends the token in the body.
+10. One real-Google run before anything is called stable: not done; the docs say so.
+Chat relay:
+- Q1: a dedicated least-privilege account; the relay's scopes are `chat.messages.create` and `chat.spaces.readonly` only (`RELAY_SCOPES`); the page shows "posting as" and has pause (page not built); the browser profile is used for nothing else (an operating rule for Dinis).
+- Q2: the link-host allow-list is required (no list, no relay); a link with a query or fragment is refused unless its host and pattern are on a list; the rule for lane authors: titles are written for Chat, with no private names or contact details, because the relay cannot detect a name.
+- Q3: no runtime CSP check; CSP and hash checks stay in CI, connect-src is exact.
+- The passkey lock is built (`relay-keys.mjs`): made on first use, asked once a session; a device with no passkey cannot hold the read key. It comes before any real item.
+- Seen and chain state are saved (`relay-state.mjs`); the first run, or any run after the saved state is lost, only marks everything on the lane as seen and posts nothing.

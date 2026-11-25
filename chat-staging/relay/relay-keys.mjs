@@ -17,8 +17,29 @@ export function idbStore(name = 'chat-relay') {
 }
 export const memoryStore = () => { const m = new Map(); return { get: async (k) => m.get(k), put: async (k, v) => { m.set(k, v); }, del: async (k) => { m.delete(k); } }; };
 
-// createRelayKeys({ store, label, gen, subtle })
-export function createRelayKeys({ store, label, gen = RSA_GEN, subtle = globalThis.crypto.subtle } = {}) {
+// The passkey lock (the CRM's step, security.b: it must be in place before the relay reads real items). A platform authenticator, asked once per
+// session before the page's keys are used. It is a lock in front of the browser key, not the key itself. With requirePasskey (the default) a device
+// with no passkey cannot hold the read key at all: the browser key does not stand alone here.
+export const browserWebauthn = () => ({
+  available: async () => { try { return !!(globalThis.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch { return false; } },
+  create: async (rpId, name) => { const c = await navigator.credentials.create({ publicKey: { rp: { name: 'Chat relay', id: rpId }, user: { id: crypto.getRandomValues(new Uint8Array(16)), name, displayName: name },
+    challenge: crypto.getRandomValues(new Uint8Array(32)), pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+    authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' }, timeout: 60000 } }); return new Uint8Array(c.rawId); },
+  get: async (credId) => { await navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), allowCredentials: [{ type: 'public-key', id: credId }], userVerification: 'required', timeout: 60000 } }); }
+});
+
+// createRelayKeys({ store, label, gen, subtle, webauthn, requirePasskey, rpId })
+export function createRelayKeys({ store, label, gen = RSA_GEN, subtle = globalThis.crypto.subtle, webauthn = browserWebauthn(), requirePasskey = true, rpId = globalThis.location?.hostname } = {}) {
+  let unlocked = false;
+  async function unlock(name = 'relay user') {
+    if (unlocked) return true;
+    const have = await store.get('passkey');
+    if (!have) {
+      if (!(await webauthn.available())) { if (requirePasskey) throw new Error('This device has no passkey, so the relay will not hold the read key here.'); unlocked = true; return true; }
+      await store.put('passkey', await webauthn.create(rpId, name)); unlocked = true; return true;
+    }
+    await webauthn.get(have); unlocked = true; return true;
+  }
   const existing = async () => { const h = await store.get(IDENTITY).catch(() => null); return h?.bundle && h.encrypt && h.sign ? h : null; };
   async function identity() {
     const have = await existing(); if (have) return have;
@@ -43,7 +64,9 @@ export function createRelayKeys({ store, label, gen = RSA_GEN, subtle = globalTh
     forget: (name) => store.del(SECRET + name)
   };
   return {
-    existing, identity, unsealWith, ...kept,
+    existing, identity, unsealWith, unlock, get unlocked() { return unlocked; },
+    // the page's keys for use (decrypt, sign): only after the passkey. Public info does not need it.
+    async session() { await unlock(); return identity(); },
     // What Dinis sends to a.maestro: the k1 string, and both fingerprints written "sha256:xxxx" (first 16 hex of each SPKI hash).
     async publicInfo() { const id = await identity(); const k1 = keyCode(id.bundle).code; return { k1, qrText: qrKey({ fp: id.bundle.signing_fingerprint, label: id.bundle.label, code: k1 }), label: id.bundle.label, encFp: id.bundle.fingerprint, signFp: id.bundle.signing_fingerprint }; },
     // openReadKey(id, sealedText, signers): a signed m1 code sealed to this page, as bare m1 text, a pki.sgit.ai link, or the strict QR JSON
@@ -51,6 +74,7 @@ export function createRelayKeys({ store, label, gen = RSA_GEN, subtle = globalTh
     // The plaintext is either a pki message (pki.sgit.ai/message/v1, whose own signature must also check and whose text is the JSON) or the JSON itself:
     //   {"kind":"lane-read-key","lane","vault_id","enum_key"}. Returns { lane, vault_id }; the read key is kept only sealed under "read-key:<lane>".
     async openReadKey(id, sealedText, signers, { lane } = {}) {
+      await unlock();
       let c; try { const q = parseQrText(sealedText); c = q.kind === 'sealed' ? parseCode(q.code) : null; } catch (e) { throw new Error('that is not a sealed code: ' + e.message); }
       if (!c) throw new Error('that is not a sealed m1 code');
       if (c.to !== id.bundle.signing_fingerprint && c.to !== id.bundle.fingerprint) throw new Error("sealed to another key, not this page's");
@@ -69,7 +93,7 @@ export function createRelayKeys({ store, label, gen = RSA_GEN, subtle = globalTh
       await kept.keep(id, 'read-key:' + g.lane, JSON.stringify({ vault_id: g.vault_id, enum_key: g.enum_key }));
       return { lane: g.lane, vault_id: g.vault_id };
     },
-    async readKey(lane) { const id = await existing(); if (!id) return null; const t = await kept.recall(id, 'read-key:' + lane); return t ? JSON.parse(t) : null; }
+    async readKey(lane) { await unlock(); const id = await existing(); if (!id) return null; const t = await kept.recall(id, 'read-key:' + lane); return t ? JSON.parse(t) : null; }
   };
 }
 // A trusted signer from a lane.entry/2-style author key: the base64url SPKI of a P-256 key. Its key id must match what the owner gave.

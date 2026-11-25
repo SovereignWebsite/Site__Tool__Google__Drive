@@ -10,15 +10,20 @@ const CONTACT = [/[^\s@]+@[^\s@]+\.[A-Za-z]{2,}/, /(?<![\w/.-])\+?\d[\d\s().-]{8
 const CTRL = new RegExp('[' + String.fromCharCode(0) + '-' + String.fromCharCode(31) + String.fromCharCode(127) + String.fromCharCode(0x2028) + String.fromCharCode(0x2029) + ']+', 'g');
 const sha = async (s) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, '0')).join('');
 
-// cleanItem(item, { hosts }) -> { text } or { reason }. Only item.id, item.title and item.link are ever read.
-export function cleanItem(item, { hosts } = {}) {
+// cleanItem(item, { hosts, queryOk }) -> { text } or { reason }. Only item.id, item.title and item.link are ever read.
+//   hosts    REQUIRED: the exact hostnames a link may point at (our own sites only). No list, no posting.
+//   queryOk  optional: [{ host, pattern: RegExp }]; a link with a query string or fragment is refused unless its host and path+query match an entry.
+//            A key or token can hide in a query or fragment, and Google's link previews fetch the link.
+export function cleanItem(item, { hosts, queryOk = [] } = {}) {
+  if (!Array.isArray(hosts) || !hosts.length) throw new Error('the link-host allow-list is required');
   if (!item || typeof item.id !== 'string' || !item.id || item.id.length > 200) return { reason: 'no id' };
   const title = typeof item.title === 'string' ? item.title.replace(CTRL, ' ').replace(/\s+/g, ' ').trim() : '';
   if (!title) return { reason: 'no title' }; if (title.length > LIMITS.title) return { reason: 'title too long' };
   let url; try { url = new URL(String(item.link)); } catch { return { reason: 'bad link' }; }
   if (url.protocol !== 'https:' || url.username || url.password) return { reason: 'link must be https with no credentials' };
   if (String(item.link).length > LIMITS.link) return { reason: 'link too long' };
-  if (hosts && !hosts.includes(url.hostname)) return { reason: 'link host not allowed' };
+  if (!hosts.includes(url.hostname)) return { reason: 'link host not allowed' };
+  if ((url.search || url.hash) && !queryOk.some((q) => q.host === url.hostname && q.pattern.test(url.pathname + url.search + url.hash))) return { reason: 'link has a query or fragment' };
   for (const s of [title, url.href]) {
     if (LEAK.some((r) => r.test(s))) return { reason: 'looks like a secret' };
     if (CONTACT.some((r) => r.test(s))) return { reason: 'looks like a contact detail' };
@@ -26,22 +31,30 @@ export function cleanItem(item, { hosts } = {}) {
   return { text: 'Needs you: ' + title + ' ' + url.href };
 }
 
-// createRelay({ post(text), read(), open(entry), seen:{has,add}, hosts, maxPerMinute, now })
+// createRelay({ post(text), read(), open(entry), seen:{has,add}, hosts, queryOk, state, maxPerMinute, now })
+//   state  { isInitialised(), markInitialised() }: with it, the FIRST run (or a run after the saved state was lost) only marks everything on the lane as seen
+//          and posts nothing. A lost store never causes a silent replay.
 //   read()  -> the lane's entries, oldest first (a test lane now, the sealed lane later)
 //   open(e) -> { id, title, link } or null when the entry is not for this page or fails verification
-export function createRelay({ post, read, open, seen, hosts, maxPerMinute = 5, now = () => Date.now() }) {
+export function createRelay({ post, read, open, seen, hosts, queryOk, state, maxPerMinute = 5, now = () => Date.now() }) {
+  if (!Array.isArray(hosts) || !hosts.length) throw new Error('the link-host allow-list is required');
   let paused = false; const sent = [];
   return {
     pause: () => { paused = true; }, resume: () => { paused = false; }, get paused() { return paused; },
     async tick() {
       const out = { posted: [], skipped: [], stopped: null };
       if (paused) { out.stopped = 'paused'; return out; }
+      if (state && !(await state.isInitialised())) {
+        let n = 0;
+        for (const entry of await read()) { let item; try { item = await open(entry); } catch { item = null; } if (item) { await seen.add(await sha(String(item.id))); n++; } }
+        await state.markInitialised(); out.baseline = n; out.stopped = 'baseline: ' + n + ' existing items marked as seen, none posted'; return out;
+      }
       for (const entry of await read()) {
         let item; try { item = await open(entry); } catch { item = null; }
         if (!item) { out.skipped.push({ reason: 'not openable' }); continue; }
         const key = await sha(String(item.id));
         if (await seen.has(key)) continue;
-        const c = cleanItem(item, { hosts }); if (c.reason) { out.skipped.push({ id: item.id, reason: c.reason }); await seen.add(key); continue; } // refused for good, not retried
+        const c = cleanItem(item, { hosts, queryOk }); if (c.reason) { out.skipped.push({ id: item.id, reason: c.reason }); await seen.add(key); continue; } // refused for good, not retried
         const t = now(); while (sent.length && t - sent[0] > 60000) sent.shift();
         if (sent.length >= maxPerMinute) { out.stopped = 'rate limit'; break; } // left unseen: the next tick posts it
         try { await post(c.text); } catch (e) { out.stopped = 'post failed: ' + (e.status || e.message); break; } // unseen: retried later

@@ -7,10 +7,11 @@ const root = new URL('../site/api/', import.meta.url).pathname, check = process.
 const sri = (f) => 'sha384-' + createHash('sha384').update(readFileSync(f)).digest('base64');
 const vs = readdirSync(root).filter((d) => /^v\d+\.\d+\.\d+$/.test(d)).map((d) => d.slice(1)).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 const prev = existsSync(root + 'versions.json') ? JSON.parse(readFileSync(root + 'versions.json', 'utf8')) : { versions: [] };
+const SUPERSEDED = { '0.1.0': 'superseded by 0.3.0 (security.b review, 25 Nov 2026): do not use for real sign-ins', '0.2.0': 'superseded by 0.3.0 (security.b review, 25 Nov 2026): do not use for real sign-ins' };
 let bad = 0; const versions = vs.map((v) => {
   const path = `/api/v${v}/drive.mjs`, h = sri(root + `v${v}/drive.mjs`), old = prev.versions.find((x) => x.version === v);
   if (old && old.sri !== h) { console.error(`v${v} was released with ${old.sri} but the file now hashes to ${h}: pinned versions never change. Make a new version.`); bad++; }
-  return { version: v, path, sri: old ? old.sri : h };
+  return { version: v, path, sri: old ? old.sri : h, ...(SUPERSEDED[v] ? { superseded: SUPERSEDED[v] } : {}) };
 });
 const newest = vs.at(-1);
 if (sri(root + 'latest/drive.mjs') !== sri(root + `v${newest}/drive.mjs`)) { console.error(`latest/ is not v${newest}`); bad++; }

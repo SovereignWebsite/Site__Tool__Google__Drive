@@ -1,9 +1,9 @@
-// Sovereign Website Drive API, v0.2.0. One ES module, no dependencies, no telemetry.
+// Sovereign Website Drive API, v0.3.0. One ES module, no dependencies, no telemetry.
 // Pinned: this file never changes once released. Import it from https://drive.google.tool.sovereignweb.site/api/v0.1.0/drive.mjs
 // The importing site brings its own Google OAuth client id and registers its own origin and redirect URI in Google Cloud.
 // Built on the shared Google base (api-src/base.mjs). Sign-in is Google's OAuth 2.0 token flow for web apps (a redirect, response_type=token). No Google script is loaded.
 // The token is kept only for its hour, encrypted with a non-extractable key held in IndexedDB (memory if IndexedDB fails).
-export const VERSION = '0.2.0';
+export const VERSION = '0.3.0';
 export const SCOPES = {
   file: 'https://www.googleapis.com/auth/drive.file',            // files this site creates or the person picks. No restricted review.
   readonly: 'https://www.googleapis.com/auth/drive.readonly',    // RESTRICTED: read the whole Drive
@@ -20,12 +20,13 @@ export const EXPORTS = { // default export type for Google's own formats
   'application/vnd.google-apps.drawing': 'image/png'
 };
 const quote = (s) => "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+const MIME = /^[A-Za-z0-9!#$&^_.+-]+\/[A-Za-z0-9!#$&^_.+-]+(;[\x20-\x7e]*)?$/;
 const FIELDS = 'id,name,mimeType,size,modifiedTime,parents,webViewLink,trashed';
 
 //#include base.mjs
 
 export function createDrive(opts = {}) {
-  const g = createGoogle({ ...opts, scope: opts.scope || SCOPES.file, errorClass: DriveError });
+  const g = createGoogle({ ...opts, name: 'drive', scope: opts.scope || SCOPES.file, errorClass: DriveError });
   const env = g.env, json = g.json, call = g.call;
 
   const api = {
@@ -62,7 +63,10 @@ export function createDrive(opts = {}) {
     // ----- write -----
     // upload(data, { name, type, parent }): data is a Blob, File, string or ArrayBuffer. Multipart, for files up to a few MB.
     async upload(data, { name, type, parent } = {}) {
-      const blob = data instanceof Blob ? data : new Blob([data], { type: type || 'application/octet-stream' });
+      const mime = String(type || (data instanceof Blob && data.type) || 'application/octet-stream');
+      if (!MIME.test(mime)) throw new DriveError('The type must look like type/subtype (no line breaks).', 400);
+      type = mime;
+      const blob = data instanceof Blob ? data : new Blob([data], { type });
       const meta = { name: name || data.name || 'untitled' }; if (parent) meta.parents = [parent];
       const b = 'sw' + [...env.crypto.getRandomValues(new Uint8Array(12))].map((x) => x.toString(16).padStart(2, '0')).join('');
       const body = new Blob(['--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n', JSON.stringify(meta), '\r\n--' + b + '\r\nContent-Type: ' + (type || blob.type || 'application/octet-stream') + '\r\n\r\n', blob, '\r\n--' + b + '--']);
